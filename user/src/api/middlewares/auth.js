@@ -1,4 +1,4 @@
-const { ValidateSignature } = require('../../utils/index');
+const { ValidateSignature } = require('../../utils');
 
 module.exports = async (req,res,next) => {
     

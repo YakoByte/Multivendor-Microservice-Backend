@@ -8,6 +8,7 @@ const historySchema = new mongoose(
     },
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
     },
     log: {
         actionType: String,

@@ -8,16 +8,12 @@ module.exports.GenerateSalt = async () => {
   return await bcrypt.genSalt();
 };
 
-module.exports.GeneratePassword = async (password, salt) => {
-  return await bcrypt.hash(password, salt);
+module.exports.GeneratePassword = async (password, savedPassword) => {
+  return await bcrypt.compare(password, savedPassword);
 };
 
-module.exports.ValidatePassword = async (
-  enteredPassword,
-  savedPassword,
-  salt
-) => {
-  return (await this.GeneratePassword(enteredPassword, salt)) === savedPassword;
+module.exports.ValidatePassword = async (enteredPassword, savedPassword) => {
+  return (await this.GeneratePassword(enteredPassword, savedPassword));
 };
 
 module.exports.GenerateSignature = async (payload) => {

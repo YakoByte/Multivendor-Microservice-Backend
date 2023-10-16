@@ -17,7 +17,7 @@ const addressSchema = new mongoose.Schema(
         type:String,
         required :true
     },
-    pinCode: {
+    postalCode: {
         type: Number,
         minlength:6, 
         maxLength:6,
@@ -26,7 +26,7 @@ const addressSchema = new mongoose.Schema(
     country: {
         type: String,
         required: true,
-        default: India
+        default: 'India'
     }
   },
   { timestamps: true }

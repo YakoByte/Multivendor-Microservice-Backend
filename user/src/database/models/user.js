@@ -17,12 +17,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    loginHistoryId: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "LoginHistory",
-      },
-    ],
   },
   { timestamps: true }
 );

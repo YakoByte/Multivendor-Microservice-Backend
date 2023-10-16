@@ -1,28 +1,23 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const { SECRET_KEY } = require("../config/index");
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
-  return await bcrypt.genSalt();
+  return await bcrypt.genSalt(10);
 };
 
 module.exports.GeneratePassword = async (password, salt) => {
   return await bcrypt.hash(password, salt);
 };
 
-module.exports.ValidatePassword = async (
-  enteredPassword,
-  savedPassword,
-  salt
-) => {
-  return (await this.GeneratePassword(enteredPassword, salt)) === savedPassword;
+module.exports.ValidatePassword = async (enteredPassword, savedPassword) => {
+  return (await bcrypt.compare(enteredPassword, savedPassword));
 };
 
 module.exports.GenerateSignature = async (payload) => {
   try {
-    return await jwt.sign(payload, SECRET_KEY, { expiresIn: "30d" });
+    return await jwt.sign(payload, SECRET_KEY, { expiresIn: "10d" });
   } catch (error) {
     console.log(error);
     return error;

@@ -43,16 +43,16 @@ const sellerSchema = new mongoose.Schema(
         },
       },
     ],
+    description: {
+      type: String,
+      required: true,
+    },
     Address: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Address",
       },
     ],
-    description: {
-      type: String,
-      required: true,
-    },
     isVerified: {
       type: Boolean,
       default: false,

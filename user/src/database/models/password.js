@@ -2,8 +2,9 @@ const mongoose = require("mongoose");
 
 const passwordSchema = new mongoose.Schema(
   {
-    password: {
-      type: String,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     passwordQuestion: {

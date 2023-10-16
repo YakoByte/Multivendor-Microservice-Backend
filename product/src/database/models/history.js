@@ -6,8 +6,9 @@ const historySchema = new mongoose(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    orderId: {
+    productId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
     },
     log: {
         actionType: String,
