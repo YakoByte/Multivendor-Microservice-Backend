@@ -130,7 +130,7 @@ class SellerRepository {
         if (history) {
           history.log.push({
             objectId: addressResult._id,
-            action: "password created",
+            action: "Address created",
             date: new Date().toISOString(),
             time: Date.now(),
           });
@@ -152,6 +152,19 @@ class SellerRepository {
     try {
       const userResult = await userModel.findOne({ email });
 
+      if(userResult){
+        const history = await historyModel.findOne({ userId: userResult._id });
+        if (history) {
+          history.log.push({
+            objectId: userResult._id,
+            action: "User login",
+            date: new Date().toISOString(),
+            time: Date.now(),
+          });
+          await history.save();
+        }
+      }
+
       return userResult;
     } catch (error) {
       throw new APIError(
@@ -164,23 +177,36 @@ class SellerRepository {
 
   async FindUserById({ userId }) {
     try {
-      const user = await userModel.findById({ userId });
+      const user = await userModel.findById(userId);
+      if (!user) {
+        throw new APIError("User not found", STATUS_CODES.NOT_FOUND, "User not found");
+      }
+
       const address = await addressModel.findOne({ userId });
       const profile = await sellerModel.findOne({ userId });
       const password = await passwordModel.findOne({ userId });
 
       const userResult = {
+        userData: user,
         profileDate: profile,
         passwordSecurityDate: password,
         addressData: address,
       };
+
+      const history = await historyModel.findOne({ userId: userId });
+      if (history) {
+        history.log.push({
+          objectId: userId,
+          action: "profile visited",
+          date: new Date().toISOString(),
+          time: Date.now(),
+        });
+        await history.save();
+      }
+
       return userResult;
     } catch (error) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Error on Create Address"
-      );
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
     }
   }
 }

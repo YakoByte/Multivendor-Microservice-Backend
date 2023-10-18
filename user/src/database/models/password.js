@@ -18,7 +18,7 @@ const passwordSchema = new mongoose.Schema(
     history: [
       {
         type: Date,
-        default: null,
+        default: Date.now(),
         required: true,
       },
     ],

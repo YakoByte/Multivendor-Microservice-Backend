@@ -129,7 +129,7 @@ class BuyerRepository {
         if (history) {
           history.log.push({
             objectId: addressResult._id,
-            action: "password created",
+            action: "Address created",
             date: new Date().toISOString(),
             time: Date.now(),
           });
@@ -189,6 +189,19 @@ class BuyerRepository {
     try {
       const userResult = await userModel.findOne({ email });
 
+      if(userResult){
+        const history = await historyModel.findOne({ userId: userResult._id });
+        if (history) {
+          history.log.push({
+            objectId: userResult._id,
+            action: "User login",
+            date: new Date().toISOString(),
+            time: Date.now(),
+          });
+          await history.save();
+        }
+      }
+
       return userResult;
     } catch (error) {
       throw new APIError(
@@ -201,27 +214,37 @@ class BuyerRepository {
 
   async FindUserById({ userId }) {
     try {
-      const user = await userModel.findById({ userId });
+      const user = await userModel.findById(userId);
+      if (!user) {
+        throw new APIError("User not found", STATUS_CODES.NOT_FOUND, "User not found");
+      }
+
       const address = await addressModel.findOne({ userId });
       const profile = await buyerModel.findOne({ userId });
       const password = await passwordModel.findOne({ userId });
 
       const userResult = {
+        userData: user,
         profileDate: profile,
         passwordSecurityDate: password,
         addressData: address,
       };
-      return {
-        message: "user fetch successfully",
-        status: STATUS_CODES.OK,
-        userResult,
-      };
+
+      const history = await historyModel.findOne({ userId: userId });
+      if (history) {
+        history.log.push({
+          objectId: userId,
+          action: "profile visited",
+          date: new Date().toISOString(),
+          time: Date.now(),
+        });
+        await history.save();
+      }
+
+      return userResult;
     } catch (error) {
       throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Error on Create Address"
-      );
+        "API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
     }
   }
 }

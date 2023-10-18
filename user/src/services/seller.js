@@ -28,7 +28,7 @@ class SellerService {
             _id: existingSeller._id,
           });
 
-          return FormateData({ id: existingSeller._id, token });
+          return FormateData({ existingSeller, token });
         }
       }
 
@@ -45,7 +45,7 @@ class SellerService {
 
       let userPassword = await GeneratePassword(password, salt);
 
-      const existingSeller = await this.repository.CreateUser({
+      const Seller = await this.repository.CreateUser({
         email,
         password: userPassword,
         phoneNo,
@@ -53,10 +53,10 @@ class SellerService {
 
       const token = await GenerateSignature({
         email: email,
-        _id: existingSeller._id,
+        _id: Seller._id,
       });
 
-      return FormateData({ token });
+      return FormateData({ Seller, token });
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
@@ -84,7 +84,7 @@ class SellerService {
 
   async GetProfile(id) {
     try {
-      const existingSeller = await this.repository.FindUserById({ id });
+      const existingSeller = await this.repository.FindUserById(id);
       return FormateData(existingSeller);
     } catch (err) {
       throw new APIError("Data Not found", err);

@@ -28,7 +28,7 @@ class BuyerService {
             _id: existingBuyer._id,
           });
 
-          return FormateData({ id: existingBuyer._id, token });
+          return FormateData({ existingBuyer, token });
         }
       }
 
@@ -45,7 +45,7 @@ class BuyerService {
 
       let userPassword = await GeneratePassword(password, salt);
 
-      const existingBuyer = await this.repository.CreateUser({
+      const Buyer = await this.repository.CreateUser({
         email,
         password: userPassword,
         phoneNo,
@@ -53,18 +53,17 @@ class BuyerService {
 
       const token = await GenerateSignature({
         email: email,
-        _id: existingBuyer._id,
+        _id: Buyer._id,
       });
 
-      return FormateData({ token });
+      return FormateData({ Buyer, token });
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
   }
 
   async AddNewAddress(userInputs) {
-    const { userId, address1, address2, city, state, postalCode, country } =
-      userInputs;
+    const { userId, address1, address2, city, state, postalCode, country } = userInputs;
 
     try {
       const addressResult = await this.repository.CreateAddress({
@@ -84,7 +83,7 @@ class BuyerService {
 
   async GetProfile(id) {
     try {
-      const existingBuyer = await this.repository.FindUserById({ id });
+      const existingBuyer = await this.repository.FindUserById(id);
       return FormateData(existingBuyer);
     } catch (err) {
       throw new APIError("Data Not found", err);

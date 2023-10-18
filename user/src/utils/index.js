@@ -17,7 +17,8 @@ module.exports.ValidatePassword = async (enteredPassword, savedPassword) => {
 
 module.exports.GenerateSignature = async (payload) => {
   try {
-    return await jwt.sign(payload, SECRET_KEY, { expiresIn: "10d" });
+    const token = "Bearer " + await jwt.sign(payload, SECRET_KEY, { expiresIn: "10d" });
+    return token;
   } catch (error) {
     console.log(error);
     return error;
@@ -38,10 +39,67 @@ module.exports.ValidateSignature = async (req) => {
   }
 };
 
+module.exports.ValidateEmailFormate = async (email) => {
+  try {
+    if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+
+module.exports.ValidatePasswordFormat = async (password) => {
+  try {
+    if (password.length < 8) {
+      return false;
+    }
+    if (/\s/.test(password)) {
+      return false;
+    }
+    if (!/[a-z]/.test(password)) {
+      return false;
+    }
+    if (!/[A-Z]/.test(password)) {
+      return false;
+    }
+    if (!/\d/.test(password)) {
+      return false;
+    }
+    if (!/[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]/.test(password)) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+
+module.exports.ValidateNumberFormate = (number) => {
+  try {
+    if (number.length < 1) {
+      return false;
+    }
+    if (/\s/.test(number)) {
+      return false;
+    }
+    if(!/[0-9]/.test(number)){
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+
 module.exports.FormateData = (data) => {
   if (data) {
     return { data };
   } else {
-    throw new Error("Data Not found!");
+    return {message: "Data Not found!"};
   }
 };

@@ -1,10 +1,11 @@
 const SellerService = require("../services/seller");
+const { ValidateEmail, ValidatePassword, ValidateNumber } = require("./validators");
 const UserAuth = require("./middlewares/auth");
 
 module.exports = (app) => {
   const service = new SellerService();
 
-  app.post("/seller/signup", async (req, res, next) => {
+  app.post("/seller/signup", ValidateEmail, ValidatePassword, ValidateNumber, async (req, res, next) => {
     try {
       const { email, password, phoneNo } = req.body;
       const { data } = await service.SignUp({ email, password, phoneNo });
@@ -17,9 +18,7 @@ module.exports = (app) => {
   app.post("/seller/login", async (req, res, next) => {
     try {
       const { email, password } = req.body;
-
       const { data } = await service.SignIn({ email, password });
-
       return res.json(data);
     } catch (err) {
       next(err);
@@ -43,7 +42,7 @@ module.exports = (app) => {
   app.get("/seller/profile", UserAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
-      const { data } = await service.GetProfile({ _id });
+      const { data } = await service.GetProfile(_id);
       return res.json(data);
     } catch (err) {
       next(err);
