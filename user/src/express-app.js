@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const { User } = require("./api");
 const { Admin } = require("./api");
 const { Other } = require("./api");
 const { Buyer } = require("./api");
@@ -13,6 +14,7 @@ module.exports = async (app) => {
   app.use(express.static(__dirname + "/public"));
 
   //api
+  User(app);
   Admin(app);
   Seller(app);
   Buyer(app);

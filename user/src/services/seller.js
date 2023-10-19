@@ -1,12 +1,6 @@
 const { SellerRepository } = require("../database");
-const {
-  FormateData,
-  GeneratePassword,
-  GenerateSalt,
-  GenerateSignature,
-  ValidatePassword,
-} = require("../utils");
-const { APIError, BadRequestError } = require("../utils/app-error");
+const { FormateData } = require("../utils");
+const { APIError } = require("../utils/app-error");
 
 // All Business logic will be here
 class SellerService {
@@ -14,80 +8,39 @@ class SellerService {
     this.repository = new SellerRepository();
   }
 
-  async SignIn(userInputs) {
-    const { email, password } = userInputs;
+  async CreateSellerProfile(userInputs) {
     try {
-      const existingSeller = await this.repository.FindUser({ email });
+      const { userId, company, logo, badgeId, description, address1, address2, city, state, postalCode, country } = userInputs;
+      const address = this.repository.CreateAddress({ userId, address1, address2, city, state, postalCode, country });
 
-      if (existingSeller) {
-        const validPassword = await ValidatePassword(password, existingSeller.password);
+      const addressId = address._id; 
+      const Profile = this.repository.CreateSeller({ userId, company, logo, badgeId, description, addressId });
+      return FormateData(Profile, address);
+    } catch (error) {
+      throw new APIError("Seller Profile Create failed", err);
+    }
+  }
 
-        if (validPassword) {
-          const token = await GenerateSignature({
-            email: existingSeller.email,
-            _id: existingSeller._id,
-          });
+  async updatedSellerProfile(userInputs) {
+    try {
+      const { userId, data, logo } = userInputs;
+      const updatedProfile = this.repository.updateSeller({ userId, data, logo });
+      return FormateData(updatedProfile);
+    }catch(error){
+      throw new APIError('Seller profile update failed', error);
+    }
+  }
 
-          return FormateData({ existingSeller, token });
-        }
+  async DeleteUserAccount(id) {
+    try {
+      const existingSeller = await this.repository.DeleteUser(id);
+      if(existingSeller) {
+        return FormateData(existingSeller, 'successfully deleted');
       }
 
-      return FormateData(null);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
-    }
-  }
-
-  async SignUp(userInputs) {
-    const { email, password, phoneNo } = userInputs;
-    try {
-      let salt = await GenerateSalt();
-
-      let userPassword = await GeneratePassword(password, salt);
-
-      const Seller = await this.repository.CreateUser({
-        email,
-        password: userPassword,
-        phoneNo,
-      });
-
-      const token = await GenerateSignature({
-        email: email,
-        _id: Seller._id,
-      });
-
-      return FormateData({ Seller, token });
-    } catch (err) {
-      throw new APIError("Data Not found", err);
-    }
-  }
-
-  async AddNewAddress(userInputs) {
-    const { userId, address1, address2, city, state, postalCode, country } =
-      userInputs;
-
-    try {
-      const addressResult = await this.repository.CreateAddress({
-        userId,
-        address1,
-        address2,
-        city,
-        state,
-        postalCode,
-        country,
-      });
-      return FormateData(addressResult);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
-    }
-  }
-
-  async GetProfile(id) {
-    try {
-      const existingSeller = await this.repository.FindUserById(id);
-      return FormateData(existingSeller);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
+      return 'error in deleting';
+    } catch (error) {
+      throw new APIError("Data Not found", error);
     }
   }
 }

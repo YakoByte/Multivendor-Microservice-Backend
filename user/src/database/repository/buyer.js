@@ -4,88 +4,25 @@ const {
   addressModel,
   buyerModel,
   historyModel,
-  couponModel,
 } = require("../models");
 const {
   APIError,
-  BadRequestError,
   STATUS_CODES,
 } = require("../../utils/app-error");
 
 class BuyerRepository {
-  async CreateUser({ email, password, phoneNo }) {
+  async CreateBuyer({userId, name, badgeId, genderId, addressId}) {
     try {
-      const findUser = await userModel.findOne({ email });
-      if (findUser) {
-        return findUser;
-      }
-
-      const user = new userModel({
-        email: email,
-        password: password,
-        phoneNo: phoneNo,
-      });
-      const userResult = await user.save();
-
-      const history = new historyModel({
-        userId: userResult._id,
-        log: [{
-            objectId: userResult._id,
-            action: "User created",
-            date: new Date().toISOString(),
-            time: Date.now(),
-          }],
-      });
-      await history.save();
-
-      return userResult;
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Create User"
-      );
-    }
-  }
-
-  async CreatePassword({ userId, passwordQuestion, passwordAnswer }) {
-    try {
-      const password = new passwordModel({
-        userId: userId,
-        passwordQuestion: passwordQuestion,
-        passwordAnswer: passwordAnswer,
-        history: [Date.now()],
-      });
-      const passwordResult = await password.save();
-
-      const history = await historyModel.findOne({ userId: userId });
-      if (history) {
-        history.log.push({
-          objectId: passwordResult._id,
-          action: "password created",
-          date: new Date().toISOString(),
-          time: Date.now(),
-        });
-        await history.save();
-      }
-
-      return passwordResult;
-    } catch (error) {
-      "API Error", STATUS_CODES.INTERNAL_ERROR, "Unable to Create User";
-    }
-  }
-
-  async CreateBuyer({userId, name, badgeId, genderId, phoneNo, email, addressId, isVerified}) {
-    try {
+      const existingUser = await userModel.findById(userId);
+      const phoneNo = existingUser.phoneNo;
+      const email = existingUser.email;
       const buyer = new buyerModel({
         userId,
         name,
-        logo,
         badgeId,
         genderId,
         contact: [{ phoneNo, email }],
-        addressId,
-        isVerified,
+        Address: addressId,
       });
       const buyerResult = await buyer.save();
 
@@ -102,149 +39,42 @@ class BuyerRepository {
 
       return buyerResult;
     } catch (error) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Error on Create Address"
-      );
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
     }
   }
 
-  async CreateAddress({userId, address1, address2, city, state, postalCode, country}) {
+  async updateBuyer({ userId, data }){
     try {
-      const user = await userModel.findById(userId);
-
-      if (user) {
-        const Address = new addressModel({
-          address1,
-          address2,
-          city,
-          state,
-          postalCode,
-          country,
-        });
-        const addressResult = await Address.save();
-
-        const history = await historyModel.findOne({ userId: userId });
-        if (history) {
-          history.log.push({
-            objectId: addressResult._id,
-            action: "Address created",
-            date: new Date().toISOString(),
-            time: Date.now(),
-          });
-          await history.save();
-        }
-
-        return addressResult;
-      }
-    } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Error on Create Address"
+      const updatedBuyer = await buyerModel.findOneAndUpdate(
+        { userId },
+        data,
+        { new: true }
       );
-    }
-  }
-
-  async CreateCoupon({userId, CouponId, name, constrait, description, offerType, amountOff}) {
-    try {
-      const findCoupon = await couponModel.find({ CouponId });
-      if (findCoupon) {
-        return findCoupon;
-      }
-      const coupon = new couponModel({
-        userId,
-        CouponId,
-        name,
-        constrait,
-        description,
-        offerType,
-        amountOff,
-      });
-      const couponResult = await coupon.save();
-
-      const history = await historyModel.findOne({ userId: userId });
-      if (history) {
-        history.log.push({
-          objectId: couponResult._id,
-          action: "coupon created",
-          date: new Date().toISOString(),
-          time: Date.now(),
-        });
-        await history.save();
+      if (!updatedBuyer){
+        throw new APIError('API Error', STATUS_CODES.NOT_FOUND, 'Buyer profile not found');
       }
 
-      return couponResult;
+      return updatedBuyer;
     } catch (error) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Error on Create Address"
-      );
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
     }
   }
 
-  async FindUser({ email }){
-    try {
-      const userResult = await userModel.findOne({ email });
-
-      if(userResult){
-        const history = await historyModel.findOne({ userId: userResult._id });
-        if (history) {
-          history.log.push({
-            objectId: userResult._id,
-            action: "User login",
-            date: new Date().toISOString(),
-            time: Date.now(),
-          });
-          await history.save();
-        }
+  async DeleteUser(userId){
+    try{
+      const user = await userModel.findByIdAndDelete(userId);
+      const profile = await buyerModel.findOneAndDelete({ userId });
+      for (const addr of profile.Address) {
+        const addressData = await addressModel.findByIdAndDelete(addr);
       }
-
-      return userResult;
-    } catch (error) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Error on Create Address"
-      );
-    }
-  }
-
-  async FindUserById({ userId }) {
-    try {
-      const user = await userModel.findById(userId);
-      if (!user) {
-        throw new APIError("User not found", STATUS_CODES.NOT_FOUND, "User not found");
+      const password = await passwordModel.findOneAndDelete({ userId });
+      const history = await historyModel.findOneAndDelete({ userId });
+      if(!user || !profile || !password || !history){
+        throw new APIError('Deletion Failed', STATUS_CODES.BAD_REQUEST, 'Failed to delete the User');
       }
-
-      const address = await addressModel.findOne({ userId });
-      const profile = await buyerModel.findOne({ userId });
-      const password = await passwordModel.findOne({ userId });
-
-      const userResult = {
-        userData: user,
-        profileDate: profile,
-        passwordSecurityDate: password,
-        addressData: address,
-      };
-
-      const history = await historyModel.findOne({ userId: userId });
-      if (history) {
-        history.log.push({
-          objectId: userId,
-          action: "profile visited",
-          date: new Date().toISOString(),
-          time: Date.now(),
-        });
-        await history.save();
-      }
-
-      return userResult;
-    } catch (error) {
-      throw new APIError(
-        "API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+      return true;
+    } catch(error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
 }

@@ -12,12 +12,13 @@ module.exports.GeneratePassword = async (password, salt) => {
 };
 
 module.exports.ValidatePassword = async (enteredPassword, savedPassword) => {
-  return (await bcrypt.compare(enteredPassword, savedPassword));
+  return await bcrypt.compare(enteredPassword, savedPassword);
 };
 
 module.exports.GenerateSignature = async (payload) => {
   try {
-    const token = "Bearer " + await jwt.sign(payload, SECRET_KEY, { expiresIn: "10d" });
+    const token =
+      "Bearer " + (await jwt.sign(payload, SECRET_KEY, { expiresIn: "10d" }));
     return token;
   } catch (error) {
     console.log(error);
@@ -86,9 +87,24 @@ module.exports.ValidateNumberFormate = (number) => {
     if (/\s/.test(number)) {
       return false;
     }
-    if(!/[0-9]/.test(number)){
+    if (!/[0-9]/.test(number)) {
       return false;
     }
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+
+module.exports.ValidateImageFormate = (image) => {
+  try {
+    if (image) {
+      if (!["image/png", "image/jpeg", "image/jpg", "image/svg"].includes(image.mimetype)) {
+        return false;
+      }
+    }
+
     return true;
   } catch (error) {
     console.log(error);
@@ -100,6 +116,6 @@ module.exports.FormateData = (data) => {
   if (data) {
     return { data };
   } else {
-    return {message: "Data Not found!"};
+    return { message: "Data Not found!" };
   }
 };
