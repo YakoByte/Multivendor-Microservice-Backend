@@ -10,7 +10,8 @@ const StartServer = async() => {
     await expressApp(app);
 
     app.get('/', (req,res)=> {
-        res.status(200).send({message: "User microservices called........"})
+        res.status(200).send({message: "User microservices called........"});
+        res.send(req.useragent);
     })
 
     app.listen(PORT, () => {

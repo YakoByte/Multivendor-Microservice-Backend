@@ -5,8 +5,9 @@ const {
   GenerateSalt,
   GenerateSignature,
   ValidatePassword,
+  EmailSend,
 } = require("../utils");
-const { APIError, BadRequestError } = require("../utils/app-error");
+const { APIError } = require("../utils/app-error");
 
 // All Business logic will be here
 class UserService {
@@ -59,6 +60,7 @@ class UserService {
         email: email,
         _id: User._id,
       });
+      await EmailSend(email);
 
       return FormateData({ User, Password, token });
     } catch (err) {
@@ -68,10 +70,10 @@ class UserService {
 
   async verifyUser(userInputs) {
     try{
-      const { email, isVerified } = userInputs;
-      const existingUser = await this.repository.verifyUser({email, isVerified});
-      if (!existingUser){
-        return FormateData(null, 'User not verify');
+      const { token } = userInputs;
+      const existingUser = await this.repository.verifyUser({ token });
+      if (!existingUser) {
+        return FormateData(null, 'User not verified');
       }
       return FormateData(existingUser);
     }catch(error){

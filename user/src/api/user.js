@@ -2,10 +2,14 @@ const UserService = require("../services/user");
 const { ValidateEmail, ValidatePassword, ValidateNumber } = require("./validators");
 const UserAuth = require("./middlewares/auth");
 
+const IP = require('ip');
+const axios = require('axios');
+const os = require('os');
+
 module.exports = (app) => {
   const service = new UserService();
 
-  app.post("/user/signup", ValidateEmail, ValidatePassword, ValidateNumber, async (req, res, next) => {
+  app.post("/signup", ValidateEmail, ValidatePassword, ValidateNumber, async (req, res, next) => {
     try {
       const { email, phoneNo, password, passwordQuestion, passwordAnswer } = req.body;
       const { data } = await service.SignUp({ email, phoneNo, password, passwordQuestion, passwordAnswer });
@@ -15,27 +19,38 @@ module.exports = (app) => {
     }
   });
 
-  app.post("/user/verify", async (req, res, next) => {
+  app.get("/verify/:token", async (req, res, next) => {
     try {
-      const { email, isVerified } = req.body;
-      const { data } = await service.verifyUser({ email, isVerified });
+      const token = req.params.token;
+      const { data } = await service.verifyUser({ token });
       return res.json(data);
-      } catch (err) {
+    } catch (err) {
         next(err);
       }
   })
 
-  app.post("/user/login", ValidateEmail, ValidatePassword, async (req, res, next) => {
+  app.post('/login', ValidateEmail, ValidatePassword, async (req, res, next) => {
     try {
+      const userIP = IP.address();
+      console.log(userIP);
+      const ipLookUp = await axios.get(`http://ip-api.com/json/${userIP}`);
+      const { IPdata } = ipLookUp;
+      console.log(IPdata);
+      const systemName = os.hostname();
+      console.log('System Name:', systemName);
+
       const { email, password } = req.body;
       const { data } = await service.SignIn({ email, password });
+      if(!data){
+        return res.json("Invalid Email or Password")
+      }
       return res.json(data);
     } catch (err) {
       next(err);
     }
   });
 
-  app.put("/user/password/update", ValidateEmail, ValidatePassword, async (req, res, next) => {
+  app.put("/password/update", ValidateEmail, ValidatePassword, async (req, res, next) => {
     try {
       const { email, oldPassword, password, passwordQuestion, passwordAnswer } = req.body;
       const { data } = await service.updatePassword({ email, oldPassword, password, passwordQuestion, passwordAnswer });
@@ -45,7 +60,7 @@ module.exports = (app) => {
     }
   });
 
-  app.post("/user/address", UserAuth, async (req, res, next) => {
+  app.post("/address", UserAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
       const userId = _id;
@@ -59,7 +74,7 @@ module.exports = (app) => {
     }
   });
 
-  app.get("/user/profile", UserAuth, async (req, res, next) => {
+  app.get("/profile", UserAuth, async (req, res, next) => {
     try {
       const { _id } = req.user;
       const { data } = await service.GetProfile(_id);
@@ -69,3 +84,9 @@ module.exports = (app) => {
     }
   });
 };
+
+
+
+// const response = await axios.get(`https://ipapi.co/${userIP}/json`);
+// const locationData = response.data;
+// console.log('User Location:', locationData);

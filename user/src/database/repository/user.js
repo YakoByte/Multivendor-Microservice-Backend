@@ -4,11 +4,11 @@ const {
     addressModel,
     historyModel,
   } = require("../models");
-  const {
+const {
     APIError,
     STATUS_CODES,
   } = require("../../utils/app-error");
-  
+const { SECRET_KEY } = require("../../config/index");
   
   class UserRepository {
     async CreateUser({ email, password, phoneNo }) {
@@ -49,14 +49,15 @@ const {
       }
     }
   
-    async verifyUser({email, isVerified}) {
+    async verifyUser({ token }) {
       try{
-        const existingUser = await userModel.findOneAndUpdate({email}, {isVerified}, {new: true})
-        if(!existingUser){
-          throw new APIError("User not found", STATUS_CODES.NOT_FOUND, "Unable to verify");
-        }
+        let decodedToken = jwt.verify(token, SECRET_KEY);
+        const updatedUser = await userModel.updateOne(
+          { email: decodedToken.email },
+          { $set: { isVerified: true } }
+        );
   
-        const history = await historyModel.findOne({ userId });
+        const history = await historyModel.findOne({ userId: decodedToken.userId });
         if (history) {
           history.log.push({
             objectId: existingUser._id,
@@ -67,7 +68,7 @@ const {
           await history.save();
         }
   
-        return existingUser;
+        return updatedUser;
       }catch(error) {
         throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Verifing User");
       }

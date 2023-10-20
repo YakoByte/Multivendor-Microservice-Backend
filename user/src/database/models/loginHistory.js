@@ -20,13 +20,13 @@ const loginHistorySchema = new mongoose.Schema(
     },
     isLogedIn: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   { timestamps: true }
 );
 
-loginHistorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 1 month
+loginHistorySchema.index({ createdAt: 1 }, { expireAfterSeconds: 10 * 24 * 60 * 60 }); // 10 Days
 
 const LoginHistory = mongoose.model("LoginHistory", loginHistorySchema);
 module.exports = LoginHistory;

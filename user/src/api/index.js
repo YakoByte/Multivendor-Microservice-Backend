@@ -1,5 +1,5 @@
 module.exports = {
-    User: require('./admin'),
+    User: require('./user'),
     Admin: require('./admin'),
     Seller: require('./seller'),
     Buyer: require('./buyer'),

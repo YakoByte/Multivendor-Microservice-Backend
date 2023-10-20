@@ -13,6 +13,7 @@ const {
 class AdminRepository {
   async CreateAdmin({ userId, name, genderId, addressId }) {
     try {
+      console.log("AAAAA");
       const existingUser = await userModel.findById(userId);
       const phoneNo = existingUser.phoneNo;
       const email = existingUser.email;

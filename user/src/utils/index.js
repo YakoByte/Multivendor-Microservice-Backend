@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { SECRET_KEY } = require("../config/index");
+const nodemailer = require("nodemailer");
+const { SECRET_KEY, emailUsername, emailPassword, emailService } = require("../config/index");
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
@@ -17,8 +18,7 @@ module.exports.ValidatePassword = async (enteredPassword, savedPassword) => {
 
 module.exports.GenerateSignature = async (payload) => {
   try {
-    const token =
-      "Bearer " + (await jwt.sign(payload, SECRET_KEY, { expiresIn: "10d" }));
+    const token = "Bearer " + (await jwt.sign(payload, SECRET_KEY, { expiresIn: "10d" }));
     return token;
   } catch (error) {
     console.log(error);
@@ -119,3 +119,35 @@ module.exports.FormateData = (data) => {
     return { message: "Data Not found!" };
   }
 };
+
+module.exports.EmailSend = async (data) => {
+  try {
+    const payload = { email: data };
+    const verificationToken = "Bearer " + (await jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" }));
+
+    const transporter = nodemailer.createTransport({
+      service: emailService,
+      auth: {
+        user: emailUsername,
+        pass: emailPassword,
+      },
+    });
+
+    const verificationLink = `http://localhost:4000/user/verify/${verificationToken}`;
+
+    const mailOptions = {
+      from: emailUsername,
+      to: data,
+      subject: "Verify your account",
+      text: `Hello,\n\nPlease verify your account by clicking the link below:\n${verificationLink}\n\nThank you`
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log('Email sent: ' + info.response);
+
+    return { message: 'Verification email sent.' };
+  } catch (error) {
+    console.error(error);
+  }
+}

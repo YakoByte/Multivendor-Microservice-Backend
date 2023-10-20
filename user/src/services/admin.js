@@ -10,6 +10,7 @@ class AdminService {
 
   async CreateAdminProfile(userInputs) {
     try {
+      console.log("AAAAA");
       const { userId, name, gender, address1, address2, city, state, postalCode, country } = userInputs;
       const address = this.repository.CreateAddress({ userId, address1, address2, city, state, postalCode, country });
 
@@ -17,7 +18,7 @@ class AdminService {
       const Profile = this.repository.CreateAdmin({ userId, name, gender, addressId });
       return FormateData(Profile, address);
     } catch (error) {
-      throw new APIError("Admin Profile Create failed", err);
+      throw new APIError("Admin Profile Create failed", error);
     }
   }
 
