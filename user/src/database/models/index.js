@@ -8,6 +8,6 @@ module.exports = {
     historyModel: require('./history'),
     loginHistoryModel: require('./loginHistory'),
     passwordModel: require('./password'),
-    sellerModel: require('./password'),
+    sellerModel: require('./seller'),
     userModel: require('./user'),
 }

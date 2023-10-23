@@ -10,35 +10,13 @@ class AdminService {
 
   async CreateAdminProfile(userInputs) {
     try {
-      const {
-        userId,
-        name,
-        gender,
-        address1,
-        address2,
-        city,
-        state,
-        postalCode,
-        country,
-      } = userInputs;
-      const Profile = await this.repository.CreateAdmin({
-        userId,
-        name,
-        gender,
-      });
+      const {userId, name, gender, address1, address2, city, state, postalCode, country} = userInputs;
+      const Profile = await this.repository.CreateAdmin({ userId, name, gender });
       if (!Profile) {
         return FormateData({ message: "Admin already exist" });
       }
-      const address = await this.repository.CreateAddress({
-        userId,
-        address1,
-        address2,
-        city,
-        state,
-        postalCode,
-        country,
-      });
-      return FormateData({ Profile, address });
+      const Address = await this.repository.CreateAddress({ userId, address1, address2, city, state, postalCode, country });
+      return FormateData({ Profile, Address });
     } catch (error) {
       throw new APIError("Admin Profile Create failed", error);
     }
@@ -64,14 +42,9 @@ class AdminService {
   async updatedAdminProfile(userInputs) {
     try {
       const { userId, data } = userInputs;
-      const updatedProfile = await this.repository.updateAdmin({
-        userId,
-        data,
-      });
+      const updatedProfile = await this.repository.updateAdmin({ userId, data });
       if (!updatedProfile) {
-        return FormateData({
-          message: "No admin profile found with the provided id.",
-        });
+        return FormateData({ message: "No admin profile found with the provided id." });
       }
       return FormateData({ updatedProfile });
     } catch (error) {
@@ -80,19 +53,10 @@ class AdminService {
   }
 
   async AddNewAddress(userInputs) {
-    const { userId, address1, address2, city, state, postalCode, country } =
-      userInputs;
+    const { userId, address1, address2, city, state, postalCode, country } = userInputs;
 
     try {
-      const addressResult = await this.repository.CreateAddress({
-        userId,
-        address1,
-        address2,
-        city,
-        state,
-        postalCode,
-        country,
-      });
+      const addressResult = await this.repository.CreateAddress({ userId, address1, address2, city, state, postalCode, country });
       return FormateData({ addressResult });
     } catch (err) {
       throw new APIError("Data Not found", err);
@@ -125,17 +89,15 @@ class AdminService {
     }
   }
 
-  async DeleteUserAccount(userInputs) {
+  async DeleteAdminAccount(userInputs) {
     try {
       const { userId } = userInputs;
       const existingAdmin = await this.repository.DeleteUser({ userId });
       if (existingAdmin) {
-        return FormateData({ message: "Deleted user Successfully" });
+        return FormateData({ message: "Deleted admin Successfully" });
       }
 
-      return FormateData({
-        message: "error in deleting, admin profile not founded",
-      });
+      return FormateData({ message: "error in deleting, admin profile not founded" });
     } catch (error) {
       throw new APIError("Data Not found", error);
     }

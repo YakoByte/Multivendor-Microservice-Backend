@@ -19,7 +19,7 @@ class AdminRepository {
 
       const existingAdmin = await adminModel.findOne({userId: userId});
       if(existingAdmin){
-        return null;
+        return false;
       }
       const admin = new adminModel({
         userId: userId,
@@ -42,7 +42,7 @@ class AdminRepository {
 
       return adminResult;
     } catch (error) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Admin Profile");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
 
@@ -72,7 +72,7 @@ class AdminRepository {
 
       return updatedAdmin;
     } catch (error) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on update Address");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
 
@@ -92,15 +92,6 @@ class AdminRepository {
         });
         const addressResult = await newAddress.save();
 
-        const admin = await adminModel.findOne({userId: userId});
-        if(admin) {
-          const updateAdmin = await adminModel.findOneAndUpdate(
-            { userId },
-            { $push: { Address: addressResult._id } },
-            { new: true }
-          );
-        }
-
         const history = await historyModel.findOne({ userId });
         if (history) {
           history.log.push({
@@ -112,11 +103,10 @@ class AdminRepository {
           await history.save();
         }
 
-        const Addresses = await addressModel.find({userId: userId});
-        return Addresses;
+        return addressResult;
       }
-    } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+    } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
 

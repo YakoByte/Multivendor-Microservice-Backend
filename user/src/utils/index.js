@@ -100,7 +100,7 @@ module.exports.ValidateNumberFormate = (number) => {
 module.exports.ValidateImageFormate = (image) => {
   try {
     if (image) {
-      if (!["image/png", "image/jpeg", "image/jpg", "image/svg"].includes(image.mimetype)) {
+      if (!["image/png", "image/jpeg", "image/jpg", "image/svg+xml"].includes(image.mimetype)) {
         return false;
       }
     }

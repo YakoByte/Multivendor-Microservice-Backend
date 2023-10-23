@@ -30,12 +30,6 @@ const buyerSchema = new mongoose.Schema(
         },
       },
     ],
-    Address: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Address",
-      },
-    ],
     isVerified: {
       type: Boolean,
       default: false,

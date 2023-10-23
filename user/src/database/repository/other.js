@@ -14,7 +14,7 @@ class OtherRepository {
       const GenderResult = await Gender.save();
       return GenderResult;
     } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Gender");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message );
     }
   }
 
@@ -26,19 +26,19 @@ class OtherRepository {
       }
       return null;
     } catch (err) {
-      throw new APIError( "API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching gender");
+      throw new APIError( "API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
     }
   }
 
   async FindGender({ name }) {
     try {
-      const genderResult = await genderModel.findOne({ name });
+      const genderResult = await genderModel.findOne({ name: name });
       if (genderResult) {
         return genderResult;
       }
       return null;
     } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching gender");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
     }
   }
 
@@ -50,36 +50,37 @@ class OtherRepository {
       const BadgeResult = await Badge.save();
       return BadgeResult;
     } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Badge" );
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message );
     }
   }
 
-  async GetAllBadge({ name }) {
+  async GetAllBadge() {
     try {
-      const BadgeResult = await badgeModel.findOne({ name });
+      const BadgeResult = await badgeModel.findOne();
       if (BadgeResult) {
         return BadgeResult;
       }
       return null;
     } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching badge");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
     }
   }
 
   async FindBadge({ name }) {
     try {
-      const badgeResult = await badgeModel.findOne({ name });
+      const badgeResult = await badgeModel.findOne({ name: name });
       if (badgeResult) {
         return badgeResult;
       }
       return null;
     } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching badge");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
     }
   }
 
   async CreateCoupon({userId, CouponId, name, constrait, description, offerType, amountOff}) {
     try {
+      console.log(userId, CouponId, name, constrait, description, offerType, amountOff);
       const coupon = new couponModel({
         userId: userId,
         CouponId: CouponId,
@@ -96,27 +97,39 @@ class OtherRepository {
     }
   }
 
-  async GetCoupon({ userId }) {
+  async GetAllCoupon() {
     try {
-      const CouponResult = await couponModel.find({ userId });
+      const CouponResult = await couponModel.find();
       if (CouponResult) {
         return CouponResult;
       }
       return null;
     } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching coupon");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
+    }
+  }
+
+  async GetCoupon({ userId }) {
+    try {
+      const CouponResult = await couponModel.find({ userId: userId });
+      if (CouponResult) {
+        return CouponResult;
+      }
+      return null;
+    } catch (err) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
     }
   }
 
   async FindCoupon({ userId, CouponId }) {
     try {
-      const CouponResult = await couponModel.find({ userId, CouponId });
+      const CouponResult = await couponModel.findOne({ userId: userId, CouponId:CouponId });
       if (CouponResult) {
         return CouponResult;
       }
       return null;
     } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching coupon");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
     }
   }
 }

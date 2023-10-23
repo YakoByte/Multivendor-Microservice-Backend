@@ -52,7 +52,7 @@ module.exports = (app) => {
     try {
       const { _id } = req.user;
       const userId = _id;
-      const { data } = await service.DeleteUserAccount({ userId });
+      const { data } = await service.DeleteAdminAccount({ userId });
       if(data){
         res.clearCookie('userToken');
       }
@@ -60,7 +60,7 @@ module.exports = (app) => {
     } catch(error) {
       next(error);
     }
-  })
+  });
 
   app.post("/admin/address", UserAdmin, async (req, res, next) => {
     try {

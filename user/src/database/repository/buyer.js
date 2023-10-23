@@ -11,18 +11,22 @@ const {
 } = require("../../utils/app-error");
 
 class BuyerRepository {
-  async CreateBuyer({userId, name, badgeId, genderId, addressId}) {
+  async CreateBuyer({userId, name, badgeId, genderId}) {
     try {
       const existingUser = await userModel.findById(userId);
       const phoneNo = existingUser.phoneNo;
       const email = existingUser.email;
+
+      const existingBuyer = await buyerModel.findOne({userId: userId});
+      if(existingBuyer){
+        return false;
+      }
       const buyer = new buyerModel({
         userId: userId,
         name: name,
         badgeId: badgeId,
         genderId: genderId,
         contact: [{ phoneNo: phoneNo, email: email }],
-        Address: addressId,
       });
       const buyerResult = await buyer.save();
 
@@ -30,7 +34,7 @@ class BuyerRepository {
       if (history) {
         history.log.push({
           objectId: buyerResult._id,
-          action: "profile created",
+          action: "Buyer profile created",
           date: new Date().toISOString(),
           time: Date.now(),
         });
@@ -39,25 +43,37 @@ class BuyerRepository {
 
       return buyerResult;
     } catch (error) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
+    }
+  }
+
+  async GetProfile ({userId}) {
+    try{
+      const buyerProfile = await buyerModel.find({ userId:userId });
+      if(!buyerProfile){
+        return null;
+      }
+      return buyerProfile;
+    } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
 
   async updateBuyer({ userId, data }){
     try {
-      const { datas } = data;
+      const datas = data;
       const updatedBuyer = await buyerModel.findOneAndUpdate(
         { userId: userId },
         datas,
         { new: true }
       );
       if (!updatedBuyer){
-        throw new APIError('API Error', STATUS_CODES.NOT_FOUND, 'Buyer profile not found');
+        return false;
       }
 
       return updatedBuyer;
     } catch (error) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
 
@@ -66,7 +82,8 @@ class BuyerRepository {
       const user = await userModel.findById(userId);
 
       if (user) {
-        const Address = new addressModel({
+        const newAddress = new addressModel({
+          userId: userId,
           address1: address1,
           address2: address2,
           city: city,
@@ -74,13 +91,7 @@ class BuyerRepository {
           postalCode: postalCode,
           country: country,
         });
-        const addressResult = await Address.save();
-
-        const updateBuyer = await buyerModel.findOneAndUpdate(
-          { userId },
-          { $push: { Address: addressResult._id } },
-          { new: true }
-        );
+        const addressResult = await newAddress.save();
 
         const history = await historyModel.findOne({ userId });
         if (history) {
@@ -95,22 +106,44 @@ class BuyerRepository {
 
         return addressResult;
       }
-    } catch (err) {
-      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+    } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
 
-  async DeleteUser(userId){
-    try{
-      const user = await userModel.findByIdAndDelete(userId);
-      const profile = await buyerModel.findOneAndDelete({ userId });
-      for (const addr of profile.Address) {
-        const addressData = await addressModel.findByIdAndDelete(addr);
+  async DeleteAddress({ userId, addressId }){
+    try {
+      const address = await addressModel.findOneAndDelete({userId: userId, _id: addressId});
+      if(!address){
+        return false;
       }
-      const password = await passwordModel.findOneAndDelete({ userId });
-      const history = await historyModel.findOneAndDelete({ userId });
-      if(!user || !profile || !password || !history){
-        throw new APIError('Deletion Failed', STATUS_CODES.BAD_REQUEST, 'Failed to delete the User');
+      return true;
+    } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
+    }
+  }
+
+  async GetAddress({userId}) {
+    try{
+      const addresses = await addressModel.find({ userId:userId }).sort('-createdAt');
+      if(!addresses){
+        return null;
+      }
+      return addresses;
+    } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
+    }
+  }
+
+  async DeleteUser({userId}){
+    try{
+      const user = await userModel.findOneAndDelete({_id: userId});
+      const profile = await buyerModel.findOneAndDelete({ userId: userId });
+      const address = await addressModel.deleteMany({ userId: userId });
+      const password = await passwordModel.findOneAndDelete({ userId: userId });
+      const history = await historyModel.findOneAndDelete({ userId: userId });
+      if(!user || !profile || !address || !password || !history){
+        return false;
       }
       return true;
     } catch(error) {

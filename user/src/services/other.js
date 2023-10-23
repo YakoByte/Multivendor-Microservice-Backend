@@ -13,12 +13,10 @@ class OtherService {
     try {
       const existingGender = await this.repository.FindGender({ name });
       if (existingGender){
-        FormateData({ existingGender })
+        return FormateData({ message: "Gender already exist" })
       }
 
-      const Gender = await this.repository.CreateGender({
-        name
-      });
+      const Gender = await this.repository.CreateGender({ name });
 
       return FormateData({ Gender });
     } catch (err) {
@@ -40,12 +38,10 @@ class OtherService {
     try {
       const existingBadge = await this.repository.FindBadge({ name });
       if (existingBadge){
-        FormateData({ existingBadge })
+        return FormateData({ message: "Badge already exist" })
       }
 
-      const Badge = await this.repository.CreateBadge({
-        name
-      });
+      const Badge = await this.repository.CreateBadge({ name });
 
       return FormateData({ Badge });
     } catch (err) {
@@ -67,20 +63,22 @@ class OtherService {
     try {
       const existingCoupon = await this.repository.FindCoupon({ userId, CouponId });
       if (existingCoupon){
-        return FormateData(existingCoupon, 'coupoun allready exist')
+        return FormateData({message: 'coupoun already exist'})
       }
 
-      const Coupon = await this.repository.CreateCoupon({
-        userId, 
-        CouponId, 
-        name, 
-        constrait, 
-        description, 
-        offerType, 
-        amountOff
-      });
-      return FormateData({ Coupon })
+      const Coupon = await this.repository.CreateCoupon({ userId, CouponId, name, constrait, description, offerType, amountOff });
+
+      return FormateData({ Coupon });
     } catch (err) {
+      throw new APIError("Data Not found", err);
+    }
+  }
+
+  async GetAllCoupon() {
+    try {
+      let Coupon = await this.repository.GetAllCoupon();
+      return FormateData({ Coupon });
+    } catch(error) {
       throw new APIError("Data Not found", err);
     }
   }

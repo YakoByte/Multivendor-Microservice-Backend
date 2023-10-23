@@ -10,7 +10,7 @@ module.exports = (app) => {
       const { firstName, secondName, badgeId, genderId, address1, address2, city, state, postalCode, country } = req.body;
       const { _id } = req.user;
       const userId = _id;
-      const name = firstName + secondName;
+      const name = firstName + ' ' + secondName;
       const { data } = await service.CreateBuyerProfile({ userId, name, badgeId, genderId, address1, address2, city, state, postalCode, country });
       return res.json(data);
     } catch (err) {
@@ -18,17 +18,49 @@ module.exports = (app) => {
     }
   })
 
-  app.put("/buyer/update/:id", UserBuyer, async (req, res, next) => {
+  app.get("/buyer/profile", UserBuyer, async (req, res, next) => {
     try {
-      const userId = req.params.id;
+      const { _id: userId } = req.user;
+      const { data } = await service.GetBuyerProfile({ userId });
+      return res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/buyer/profile", UserBuyer, async (req, res, next) => {
+    try {
+      const { _id } = req.user;
+      const userId = _id;
       const data = { ...req.body };
 
-      const { result } = await service.updatedBuyerProfile({userId, data});
+      if (data.firstName || data.secondName) {
+        const name = (data.firstName || "") + " " + (data.secondName || "");
+        if (data.firstName) delete data.firstName;
+        if (data.secondName) delete data.secondName;
+        data.name = name;
+      }
+
+      const result = await service.updatedBuyerProfile({ userId, data });
       return res.json(result);
     } catch (error) {
       next(error);
     }
-  })
+  });
+
+  app.delete("/buyer/profile", UserBuyer, async (req, res, next) => {
+    try {
+      const { _id } = req.user;
+      const userId = _id;
+      const { data } = await service.DeleteBuyerAccount({ userId });
+      if(data){
+        res.clearCookie('userToken');
+      }
+      return res.json(data);
+    } catch(error) {
+      next(error);
+    }
+  });
 
   app.post("/buyer/address", UserBuyer, async (req, res, next) => {
     try {
@@ -44,12 +76,23 @@ module.exports = (app) => {
     }
   });
 
-  app.delete("/buyer/profile", UserBuyer, async (req, res, next) => {
+  app.delete("/buyer/address/:id", UserBuyer, async (req, res, next) => {
     try {
-      const { _id } = req.user;
-      const { data } = await service.DeleteUserAccount(_id);
+      const { _id: userId } = req.user;
+      const addressId = req.params.id;
+      const { data } = await service.DeleteBuyerAddress({ userId, addressId });
       return res.json(data);
-    } catch(error) {
+    }catch(error){
+      next(error);
+    }
+  })
+
+  app.get("/buyer/address", UserBuyer, async (req, res, next) => {
+    try {
+      const { _id: userId } = req.user;
+      const { data } = await service.GetBuyerAddresses({ userId });
+      return res.json(data);
+    } catch (error) {
       next(error);
     }
   })
