@@ -1,8 +1,8 @@
 const {
     userModel,
     passwordModel,
-    addressModel,
     historyModel,
+    loginHistoryModel,
   } = require("../models");
 const {
     APIError,
@@ -13,12 +13,12 @@ const { SECRET_KEY } = require("../../config/index");
   class UserRepository {
     async CreateUser({ email, password, phoneNo }) {
       try {
-        const findUser = await userModel.findOne({ email });
+        const findUser = await userModel.findOne({ $or: [{ email: email }, { phoneNo: phoneNo }] });
         if (findUser) {
-          return findUser;
+          return null;
         }
   
-        const isVerified = true;
+        const isVerified = false;
   
         const user = new userModel({
           email: email,
@@ -41,13 +41,37 @@ const { SECRET_KEY } = require("../../config/index");
   
         return userResult;
       } catch (err) {
-        throw new APIError(
-          "API Error",
-          STATUS_CODES.INTERNAL_ERROR,
-          "Unable to Create User"
-        );
+        throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, err.message);
       }
     }
+
+    async CreateLoginHistory({ userId, userIP, IPdata, systemName }) {
+      try {
+        let location = 'World';
+        if (IPdata && IPdata.data && IPdata.data.location) {
+            location = IPdata.data.location;
+        }
+
+        const existingLoginHistory = await loginHistoryModel.find({ userId: userId });
+
+        if (existingLoginHistory.length < 3) {
+            const LoginData = new loginHistoryModel({
+                userId: userId,
+                IPAddress: userIP,
+                location: location,
+                system: systemName,
+                isLogedIn: true,
+            });
+
+            const LoginHistory = await LoginData.save();
+            return LoginHistory;
+        }
+
+        return existingLoginHistory;
+      } catch (error) {
+        throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Unable to Create Login History");
+      }
+    }       
   
     async verifyUser({ token }) {
       try{
@@ -60,7 +84,7 @@ const { SECRET_KEY } = require("../../config/index");
         const history = await historyModel.findOne({ userId: decodedToken.userId });
         if (history) {
           history.log.push({
-            objectId: existingUser._id,
+            objectId: decodedToken._id,
             action: "user Verified",
             date: new Date().toISOString(),
             time: Date.now(),
@@ -76,6 +100,11 @@ const { SECRET_KEY } = require("../../config/index");
   
     async CreatePassword({ userId, passwordQuestion, passwordAnswer }) {
       try {
+        const checkExistingQuestionsAnswers = await passwordModel.findOne({userId: userId,});
+        if (checkExistingQuestionsAnswers){
+          return checkExistingQuestionsAnswers;
+        }
+
         const password = new passwordModel({
           userId: userId,
           passwordQuestion: passwordQuestion,
@@ -100,10 +129,35 @@ const { SECRET_KEY } = require("../../config/index");
         "API Error", STATUS_CODES.INTERNAL_ERROR, "Unable to Create Password Security";
       }
     }
+
+    async LogOut({ userId, userIP, systemName }) {
+      try {
+          const updatedUser = await loginHistoryModel.findOneAndDelete({userId: userId, IPAddress: userIP, system: systemName});
+          if (!updatedUser) {
+              return false;
+          }
+  
+          let history = await historyModel.findOne({ userId });
+          if (history) {
+              history.log.push({
+                  objectId: updatedUser._id,
+                  action: "Logout User",
+                  date: new Date().toISOString(),
+                  time: Date.now(),
+              });
+              await history.save();
+          }
+  
+          return true;
+        } catch (err) {
+          console.log("Logout error", err);
+          throw new APIError('API Error', STATUS_CODES.BAD_REQUEST, 'Failed To Log Out User');
+        }
+    }  
   
     async UpdatePassword({userId, password}) {
       try{
-        const updatedUser = await userModel.findByIdAndUpdate(userId, { password }, { new: true });
+        const updatedUser = await userModel.findByIdAndUpdate(userId, { password: password }, { new: true });
   
         if (!updatedUser) {
           throw new APIError("User not found", STATUS_CODES.NOT_FOUND, "Unable to update password");
@@ -171,52 +225,16 @@ const { SECRET_KEY } = require("../../config/index");
           }
         }
       }catch(err){
-        console.log(err);
-      }
-    }
-  
-    async CreateAddress({ userId, address1, address2, city, state, postalCode, country }) {
-      try {
-        const user = await userModel.findById(userId);
-  
-        if (user) {
-          const Address = new addressModel({
-            address1,
-            address2,
-            city,
-            state,
-            postalCode,
-            country,
-          });
-          const addressResult = await Address.save();
-  
-          const updateUser = await userModel.findOneAndUpdate(
-            { userId },
-            { $push: { Address: addressResult._id } },
-            { new: true }
-          );
-  
-          const history = await historyModel.findOne({ userId: userId });
-          if (history) {
-            history.log.push({
-              objectId: addressResult._id,
-              action: "Address created",
-              date: new Date().toISOString(),
-              time: Date.now(),
-          });
-            await history.save();
-          }
-  
-          return addressResult;
-        }
-      } catch (err) {
-        throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+        throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on validating password detail");
       }
     }
   
     async FindUser({ email }){
       try {
         const userResult = await userModel.findOne({ email });
+        if(!userResult){
+          return null;
+        }
   
         if(userResult){
           const history = await historyModel.findOne({ userId: userResult._id });

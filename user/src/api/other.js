@@ -4,7 +4,7 @@ const UserAuth = require("./middlewares/auth");
 module.exports = (app) => {
   const service = new OtherService();
 
-  app.post("/other/gender", async (req, res, next) => {
+  app.post("/other/gender", UserAuth, async (req, res, next) => {
     try {
       const { name } = req.body;
       const { data } = await service.CreateGender({ name });
@@ -14,7 +14,7 @@ module.exports = (app) => {
     }
   });
 
-  app.get("/other/gender", async(req, res, next) => {
+  app.get("/other/gender", UserAuth, async(req, res, next) => {
     try{
       const { data } = await service.GetGender()
       return res.json(data)
@@ -23,7 +23,7 @@ module.exports = (app) => {
       }
   });
 
-  app.post("/other/badge", async (req, res, next) => {
+  app.post("/other/badge", UserAuth, async (req, res, next) => {
     try {
       const { name } = req.body;
       const { data } = await service.CreateBadge({ name });
@@ -33,7 +33,7 @@ module.exports = (app) => {
     }
   });
 
-  app.get("/other/badge", async(req, res, next) => {
+  app.get("/other/badge", UserAuth, async(req, res, next) => {
     try{
       const { data } = await service.GetBadge()
       return res.json(data)
@@ -42,7 +42,7 @@ module.exports = (app) => {
       }
   });
 
-  app.post("/other/coupon", async (req, res, next) => {
+  app.post("/other/coupon", UserAuth, async (req, res, next) => {
     try {
       const { userId, CouponId, name, constrait, description, offerType, amountOff } = req.body;
       const { data } = await service.CreateCoupon({ userId, CouponId, name, constrait, description, offerType, amountOff });
@@ -52,7 +52,7 @@ module.exports = (app) => {
     }
   });
 
-  app.get("/other/coupon", async(req, res, next) => {
+  app.get("/other/coupon", UserAuth, async(req, res, next) => {
     try{
       const { data } = await service.GetCoupon({userId})
       return res.json(data)

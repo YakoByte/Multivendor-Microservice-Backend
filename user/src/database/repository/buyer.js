@@ -17,11 +17,11 @@ class BuyerRepository {
       const phoneNo = existingUser.phoneNo;
       const email = existingUser.email;
       const buyer = new buyerModel({
-        userId,
-        name,
-        badgeId,
-        genderId,
-        contact: [{ phoneNo, email }],
+        userId: userId,
+        name: name,
+        badgeId: badgeId,
+        genderId: genderId,
+        contact: [{ phoneNo: phoneNo, email: email }],
         Address: addressId,
       });
       const buyerResult = await buyer.save();
@@ -45,9 +45,10 @@ class BuyerRepository {
 
   async updateBuyer({ userId, data }){
     try {
+      const { datas } = data;
       const updatedBuyer = await buyerModel.findOneAndUpdate(
-        { userId },
-        data,
+        { userId: userId },
+        datas,
         { new: true }
       );
       if (!updatedBuyer){
@@ -56,6 +57,45 @@ class BuyerRepository {
 
       return updatedBuyer;
     } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+    }
+  }
+
+  async CreateAddress({ userId, address1, address2, city, state, postalCode, country }) {
+    try {
+      const user = await userModel.findById(userId);
+
+      if (user) {
+        const Address = new addressModel({
+          address1: address1,
+          address2: address2,
+          city: city,
+          State: state,
+          postalCode: postalCode,
+          country: country,
+        });
+        const addressResult = await Address.save();
+
+        const updateBuyer = await buyerModel.findOneAndUpdate(
+          { userId },
+          { $push: { Address: addressResult._id } },
+          { new: true }
+        );
+
+        const history = await historyModel.findOne({ userId });
+        if (history) {
+          history.log.push({
+            objectId: addressResult._id,
+            action: "Address created",
+            date: new Date().toISOString(),
+            time: Date.now(),
+        });
+          await history.save();
+        }
+
+        return addressResult;
+      }
+    } catch (err) {
       throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
     }
   }

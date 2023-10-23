@@ -17,10 +17,5 @@ const historySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-historySchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 1 month
-
 const History = mongoose.model("History", historySchema);
 module.exports = History;
-
-
-

@@ -20,12 +20,12 @@ class SellerRepository {
       const { path: imagePath, mimetype: mimeType, size: imageSize } = logo;
 
       const seller = new sellerModel({
-        userId,
-        company,
+        userId: userId,
+        company: company,
         logo: { imagePath, mimeType, imageSize },
-        badgeId,
-        description,
-        contact: [{ phoneNo, email }],
+        badgeId: badgeId,
+        description: description,
+        contact: [{ phoneNo: phoneNo, email: email }],
         Address: addressId,
       });
       const sellerResult = await seller.save();
@@ -49,12 +49,13 @@ class SellerRepository {
 
   async updateSeller({ userId, data, logo }){
     try {
+      const { datas } = data;
       const { path: imagePath, mimetype: mimeType, size: imageSize } = logo;
 
       const updatedSeller = await Seller.findOneAndUpdate(
-        { userId },
+        { userId: userId },
         {
-          data,
+          datas,
           $set: {
             'logo.data': imagePath,
             'logo.mimeType': mimeType,
@@ -69,6 +70,45 @@ class SellerRepository {
 
       return updatedSeller;
     } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
+    }
+  }
+
+  async CreateAddress({ userId, address1, address2, city, state, postalCode, country }) {
+    try {
+      const user = await userModel.findById(userId);
+
+      if (user) {
+        const Address = new addressModel({
+          address1: address1,
+          address2: address2,
+          city: city,
+          State: state,
+          postalCode: postalCode,
+          country: country,
+        });
+        const addressResult = await Address.save();
+
+        const updateSeller = await sellerModel.findOneAndUpdate(
+          { userId },
+          { $push: { Address: addressResult._id } },
+          { new: true }
+        );
+
+        const history = await historyModel.findOne({ userId });
+        if (history) {
+          history.log.push({
+            objectId: addressResult._id,
+            action: "Address created",
+            date: new Date().toISOString(),
+            time: Date.now(),
+        });
+          await history.save();
+        }
+
+        return addressResult;
+      }
+    } catch (err) {
       throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on Create Address");
     }
   }

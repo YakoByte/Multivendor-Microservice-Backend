@@ -15,7 +15,7 @@ class SellerService {
 
       const addressId = address._id; 
       const Profile = this.repository.CreateSeller({ userId, company, logo, badgeId, description, addressId });
-      return FormateData(Profile, address);
+      return FormateData({ Profile, address });
     } catch (error) {
       throw new APIError("Seller Profile Create failed", err);
     }
@@ -25,9 +25,28 @@ class SellerService {
     try {
       const { userId, data, logo } = userInputs;
       const updatedProfile = this.repository.updateSeller({ userId, data, logo });
-      return FormateData(updatedProfile);
+      return FormateData({ updatedProfile });
     }catch(error){
       throw new APIError('Seller profile update failed', error);
+    }
+  }
+
+  async AddNewAddress(userInputs) {
+    const { userId, address1, address2, city, state, postalCode, country } = userInputs;
+
+    try {
+      const addressResult = await this.repository.CreateAddress({
+        userId,
+        address1,
+        address2,
+        city,
+        state,
+        postalCode,
+        country,
+      });
+      return FormateData({ addressResult });
+    } catch (err) {
+      throw new APIError("Data Not found", err);
     }
   }
 
@@ -35,7 +54,7 @@ class SellerService {
     try {
       const existingSeller = await this.repository.DeleteUser(id);
       if(existingSeller) {
-        return FormateData(existingSeller, 'successfully deleted');
+        return FormateData({ existingSeller });
       }
 
       return 'error in deleting';

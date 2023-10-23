@@ -15,7 +15,7 @@ class BuyerService {
 
       const addressId = address._id; 
       const Profile = this.repository.CreateBuyer({ userId, name, badgeId, genderId, addressId });
-      return FormateData(Profile, address);
+      return FormateData({ Profile, address });
     } catch (error) {
       throw new APIError("Buyer Profile Create failed", err);
     }
@@ -25,7 +25,7 @@ class BuyerService {
     try {
       const { userId, data } = userInputs;
       const updatedProfile = this.repository.updateBuyer({ userId, data });
-      return FormateData(updatedProfile);
+      return FormateData({ updatedProfile });
     }catch(error){
       throw new APIError('Buyer profile update failed', error);
     }
@@ -35,12 +35,31 @@ class BuyerService {
     try {
       const existingBuyer = await this.repository.DeleteUser(id);
       if(existingBuyer) {
-        return FormateData(existingBuyer, 'successfully deleted');
+        return FormateData({ existingBuyer });
       }
 
       return 'error in deleting';
     } catch (error) {
       throw new APIError("Data Not found", error);
+    }
+  }
+
+  async AddNewAddress(userInputs) {
+    const { userId, address1, address2, city, state, postalCode, country } = userInputs;
+
+    try {
+      const addressResult = await this.repository.CreateAddress({
+        userId,
+        address1,
+        address2,
+        city,
+        state,
+        postalCode,
+        country,
+      });
+      return FormateData({ addressResult });
+    } catch (err) {
+      throw new APIError("Data Not found", err);
     }
   }
 }

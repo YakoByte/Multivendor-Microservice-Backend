@@ -6,13 +6,13 @@ const loginHistorySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    IP: {
+    IPAddress: {
       type: String,
       required: true,
     },
     location: {
       type: String,
-      required: true,
+      default: "World"
     },
     system: {
       type: String,

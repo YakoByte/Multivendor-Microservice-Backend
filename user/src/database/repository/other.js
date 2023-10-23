@@ -9,7 +9,7 @@ class OtherRepository {
   async CreateGender({ name }) {
     try {
       const Gender = new genderModel({
-        name,
+        name: name,
       });
       const GenderResult = await Gender.save();
       return GenderResult;
@@ -30,10 +30,22 @@ class OtherRepository {
     }
   }
 
+  async FindGender({ name }) {
+    try {
+      const genderResult = await genderModel.findOne({ name });
+      if (genderResult) {
+        return genderResult;
+      }
+      return null;
+    } catch (err) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching gender");
+    }
+  }
+
   async CreateBadge({ name }) {
     try {
       const Badge = new badgeModel({
-        name,
+        name: name,
       });
       const BadgeResult = await Badge.save();
       return BadgeResult;
@@ -54,16 +66,28 @@ class OtherRepository {
     }
   }
 
+  async FindBadge({ name }) {
+    try {
+      const badgeResult = await badgeModel.findOne({ name });
+      if (badgeResult) {
+        return badgeResult;
+      }
+      return null;
+    } catch (err) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Error on fetching badge");
+    }
+  }
+
   async CreateCoupon({userId, CouponId, name, constrait, description, offerType, amountOff}) {
     try {
       const coupon = new couponModel({
-        userId,
-        CouponId,
-        name,
-        constrait,
-        description,
-        offerType,
-        amountOff,
+        userId: userId,
+        CouponId: CouponId,
+        name: name,
+        constrait: constrait,
+        description: description,
+        offerType: offerType,
+        amountOff: amountOff,
       });
       const couponResult = await coupon.save();
       return couponResult;

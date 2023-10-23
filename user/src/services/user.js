@@ -6,24 +6,31 @@ const {
   GenerateSignature,
   ValidatePassword,
   EmailSend,
+  passwordUpdateEmailSend,
 } = require("../utils");
 const { APIError } = require("../utils/app-error");
 
-// All Business logic will be here
 class UserService {
   constructor() {
     this.repository = new UserRepository();
   }
 
   async SignIn(userInputs) {
-    const { email, password } = userInputs;
+    const { email, password, userIP, IPdata, systemName } = userInputs;
     try {
       const existingUser = await this.repository.FindUser({ email });
-
       if (existingUser) {
         const validPassword = await ValidatePassword(password, existingUser.password);
 
         if (validPassword) {
+          const previousLoginHistory = await this.repository.CreateLoginHistory({userId: existingUser._id, userIP, IPdata, systemName});
+          if (previousLoginHistory.length >= 3) {
+            return FormateData({
+              message: "You can only login to 3 devices at a time",
+              previousLoginHistory
+            });
+          }
+
           const token = await GenerateSignature({
             email: existingUser.email,
             _id: existingUser._id,
@@ -33,14 +40,14 @@ class UserService {
         }
       }
 
-      return FormateData(null);
+      return FormateData({message: "Invalid Email or Password"});
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
   }
 
   async SignUp(userInputs) {
-    const { email, phoneNo, password, passwordQuestion, passwordAnswer } = userInputs;
+    const { email, phoneNo, password, passwordQuestion, passwordAnswer, userIP, IPdata, systemName } = userInputs;
     try {
       let salt = await GenerateSalt();
       let userPassword = await GeneratePassword(password, salt);
@@ -49,12 +56,17 @@ class UserService {
         password: userPassword,
         phoneNo,
       });
+      if (!User) {
+        return FormateData({ message: "User already exist" });
+      }
+
+      await this.repository.CreateLoginHistory({userId: User._id, userIP, IPdata, systemName});
 
       const Password = await this.repository.CreatePassword({
         userId: User._id,
         passwordQuestion,
-        passwordAnswer
-      })
+        passwordAnswer,
+      });
 
       const token = await GenerateSignature({
         email: email,
@@ -62,31 +74,46 @@ class UserService {
       });
       await EmailSend(email);
 
-      return FormateData({ User, Password, token });
+      return FormateData({  message: `A verification link has been sent to your registered mail id ${email}`, User, Password, token });
+    } catch (err) {
+      throw new APIError("Data Not found", err);
+    }
+  }
+
+  async LogOut(userInputs) {
+    const { userId, userIP, systemName } = userInputs;
+    try {
+      const logoutUser = await this.repository.LogOut({ userId, userIP, systemName });
+      if(!logoutUser){
+        return FormateData({message:"Failed to logout"})
+      }
+      return FormateData({ message:"logout user.....!" });
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
   }
 
   async verifyUser(userInputs) {
-    try{
+    try {
       const { token } = userInputs;
       const existingUser = await this.repository.verifyUser({ token });
       if (!existingUser) {
-        return FormateData(null, 'User not verified');
+        return FormateData(null);
       }
-      return FormateData(existingUser);
-    }catch(error){
+      return FormateData({ existingUser });
+    } catch (error) {
       throw new APIError("Data Not found", err);
     }
   }
 
   async updatePassword(userInputs) {
     try {
-      const { email, oldPassword, newPassword, passwordQuestion, passwordAnswer } = userInputs;
+      const { email, oldPassword, password, passwordQuestion, passwordAnswer } = userInputs;
+      let salt = await GenerateSalt();
+      let newPassword = await GeneratePassword(password, salt);
       const existingUser = await this.repository.FindUser({ email });
       if (!existingUser) {
-        return FormateData(null, 'User not found');
+        return FormateData({message: "email is not registered.....!"});
       }
 
       if (await ValidatePassword(oldPassword, existingUser.password)) {
@@ -95,52 +122,59 @@ class UserService {
           _id: existingUser._id,
         });
         return FormateData({ existingUser, token });
-      } 
-      
-      if(await passwordDetailsCheck(existingUser._id, passwordQuestion, passwordAnswer)){
-        const updatedUser = await this.repository.UpdatePassword(existingUser._id, newPassword);
-        return FormateData(updatedUser, 'Password updated successfully');
       }
-  
-      const updatedUser = await this.repository.UpdatePassword(existingUser._id, newPassword);
-      const updatedPassword = await this.repository.UpdatePasswordDetails({
-        userId: existingUser._id,
-        passwordQuestion,
-        passwordAnswer
-      });
-      const token = await GenerateSignature({
-        email: updatedUser.email,
-        _id: updatedUser._id,
-      });
-      return FormateData({ updatedUser, updatedPassword, token });
+
+      if (await this.repository.passwordDetailsCheck({userId: existingUser._id, passwordQuestion, passwordAnswer})) {
+        const updatedUser = await this.repository.UpdatePassword({userId: existingUser._id, password: newPassword});
+
+        const token = await GenerateSignature({
+          email: updatedUser.email,
+          _id: updatedUser._id,
+        });
+
+        return FormateData({ updatedUser, token });
+      }
+      return FormateData({ message: "Invalid Security question and answer...!" });
     } catch (err) {
       throw new APIError("Password update failed", err);
     }
   }
-  
-  async AddNewAddress(userInputs) {
-    const { userId, address1, address2, city, state, postalCode, country } = userInputs;
 
+  async updatePasswordByEmail(userInputs) {
     try {
-      const addressResult = await this.repository.CreateAddress({
-        userId,
-        address1,
-        address2,
-        city,
-        state,
-        postalCode,
-        country,
-      });
-      return FormateData(addressResult);
-    } catch (err) {
-      throw new APIError("Data Not found", err);
+      const { email } = userInputs;
+      const existingUser = await this.repository.FindUser({ email });
+      if(!existingUser){
+        return FormateData({message: "email not registered.....!"});
+      }
+      const userId = existingUser._id.toString();
+
+      let salt = await GenerateSalt();
+      let sendEmail = await GeneratePassword(email, salt);
+      let sendId = await GeneratePassword(userId, salt);
+      await passwordUpdateEmailSend(email, sendEmail, sendId);
+
+      return FormateData({ message: `A link has been sent to your registered mail id ${email}` });
+    } catch (error) {
+      throw new APIError("Password update failed", err);
+    }
+  }
+
+  async updatePasswordByEmailLink(userInputs){
+    try {
+      const{userId, password, passwordQuestion, passwordAnswer} = userInputs;
+      const updatedUser = await this.repository.UpdatePassword({userId, password});
+      const updatedPassword = await this.repository.UpdatePasswordDetails({userId, passwordQuestion, passwordAnswer});
+      return FormateData({updatedUser, updatedPassword});
+    } catch (error) {
+      throw new APIError("Password update failed", err);
     }
   }
 
   async GetProfile(id) {
     try {
       const existingUser = await this.repository.FindUserById(id);
-      return FormateData(existingUser);
+      return FormateData({ existingUser });
     } catch (err) {
       throw new APIError("Data Not found", err);
     }

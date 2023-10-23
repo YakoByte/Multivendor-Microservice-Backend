@@ -151,3 +151,32 @@ module.exports.EmailSend = async (data) => {
     console.error(error);
   }
 }
+
+module.exports.passwordUpdateEmailSend = async (email, sendEmail, sendId) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: emailService,
+      auth: {
+        user: emailUsername,
+        pass: emailPassword,
+      },
+    });
+
+    const passwordLink = `http://localhost:4000/password/update/${sendEmail}/${sendId}`;
+
+    const mailOptions = {
+      from: emailUsername,
+      to: email,
+      subject: "Update your password",
+      text: `Hello,\n\nPlease "Update your password by clicking the link below:\n${passwordLink}\n\nThank you`
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log('Email sent: ' + info.response);
+
+    return { message: 'Verification email sent.' };
+  } catch (error) {
+    console.error(error);
+  }
+}

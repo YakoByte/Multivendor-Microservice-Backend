@@ -2,9 +2,14 @@ const mongoose = require("mongoose");
 
 const addressSchema = new mongoose.Schema(
   {
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
     address1: {
         type: String,
-        require: true
+        required: true
     },
     address2: {
         type: String
@@ -25,7 +30,6 @@ const addressSchema = new mongoose.Schema(
     },
     country: {
         type: String,
-        required: true,
         default: 'India'
     }
   },

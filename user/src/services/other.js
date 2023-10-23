@@ -20,7 +20,7 @@ class OtherService {
         name
       });
 
-      return FormateData(Gender);
+      return FormateData({ Gender });
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
@@ -29,7 +29,7 @@ class OtherService {
   async GetGender() {
     try {
       let genders = await this.repository.GetAllGender();
-      return FormateData(genders);
+      return FormateData({ genders });
     } catch(error) {
       throw new APIError("Data Not found", err);
     }
@@ -47,7 +47,7 @@ class OtherService {
         name
       });
 
-      return FormateData(Badge);
+      return FormateData({ Badge });
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
@@ -56,7 +56,7 @@ class OtherService {
   async GetBadge() {
     try {
       let badges = await this.repository.GetAllBadge();
-      return FormateData(badges);
+      return FormateData({ badges });
     } catch(error) {
       throw new APIError("Data Not found", err);
     }
@@ -79,7 +79,7 @@ class OtherService {
         offerType, 
         amountOff
       });
-      return FormateData(Coupon, 'coupoun created')
+      return FormateData({ Coupon })
     } catch (err) {
       throw new APIError("Data Not found", err);
     }
@@ -89,7 +89,7 @@ class OtherService {
     const { userId } = userInputs;
     try {
       let Coupon = await this.repository.GetCoupon({userId});
-      return FormateData(Coupon);
+      return FormateData({ Coupon });
     } catch(error) {
       throw new APIError("Data Not found", err);
     }

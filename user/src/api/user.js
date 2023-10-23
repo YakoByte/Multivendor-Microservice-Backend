@@ -11,15 +11,24 @@ module.exports = (app) => {
 
   app.post("/signup", ValidateEmail, ValidatePassword, ValidateNumber, async (req, res, next) => {
     try {
+      const userIP = IP.address();
+      const ipLookUp = await axios.get(`http://ip-api.com/json/${userIP}`);
+      const { IPdata } = ipLookUp;
+      const systemName = os.hostname();
+
       const { email, phoneNo, password, passwordQuestion, passwordAnswer } = req.body;
-      const { data } = await service.SignUp({ email, phoneNo, password, passwordQuestion, passwordAnswer });
+      const { data } = await service.SignUp({ email, phoneNo, password, passwordQuestion, passwordAnswer, userIP, IPdata, systemName });
+      res.cookie("userToken", data.token, {
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
       return res.json(data);
     } catch (err) {
       next(err);
     }
   });
 
-  app.get("/verify/:token", async (req, res, next) => {
+  app.post("/verify/:token", async (req, res, next) => {
     try {
       const token = req.params.token;
       const { data } = await service.verifyUser({ token });
@@ -32,21 +41,33 @@ module.exports = (app) => {
   app.post('/login', ValidateEmail, ValidatePassword, async (req, res, next) => {
     try {
       const userIP = IP.address();
-      console.log(userIP);
       const ipLookUp = await axios.get(`http://ip-api.com/json/${userIP}`);
       const { IPdata } = ipLookUp;
-      console.log(IPdata);
       const systemName = os.hostname();
-      console.log('System Name:', systemName);
 
       const { email, password } = req.body;
-      const { data } = await service.SignIn({ email, password });
-      if(!data){
-        return res.json("Invalid Email or Password")
-      }
+      const { data } = await service.SignIn({ email, password, userIP, IPdata, systemName });
+      res.cookie("userToken", data.token, {
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
       return res.json(data);
     } catch (err) {
       next(err);
+    }
+  });
+
+  app.post('/logout', UserAuth, async(req, res, next) => {
+    try {
+      const userIP = IP.address();
+      const systemName = os.hostname();
+      const { _id } = req.user;
+      const userId = _id;
+      const { data } = await service.LogOut({userId, userIP, systemName});
+      res.clearCookie('userToken');
+      return res.json(data);
+    } catch (error) {
+      next(error);
     }
   });
 
@@ -54,20 +75,33 @@ module.exports = (app) => {
     try {
       const { email, oldPassword, password, passwordQuestion, passwordAnswer } = req.body;
       const { data } = await service.updatePassword({ email, oldPassword, password, passwordQuestion, passwordAnswer });
+      res.cookie("userToken", data.token, {
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+      });
       return res.json(data);
     } catch (err) {
       next(err);
     }
   });
 
-  app.post("/address", UserAuth, async (req, res, next) => {
+  app.post("/password/update/email", ValidateEmail, async (req, res, next) => {
     try {
-      const { _id } = req.user;
+        const { email } = req.body;
+        const { data } = await service.updatePasswordByEmail({ email });
+        return res.json(data);
+    } catch (err) {
+        next(err);
+    }
+  });
+
+  app.post("/password/update/:email/:_id", ValidateEmail, ValidatePassword, async (req, res, next) => {
+    try {
+      const email = req.params.email;
+      const _id = req.params._id;
       const userId = _id;
-      const { address1, address2, city, state, postalCode, country } = req.body;
-
-      const { data } = await service.AddNewAddress({userId, address1, address2, city, state, postalCode, country});
-
+      const { password, passwordQuestion, passwordAnswer } = req.body;
+      const { data } = await service.updatePasswordByEmailLink({ email, userId, password, passwordQuestion, passwordAnswer });
       return res.json(data);
     } catch (err) {
       next(err);

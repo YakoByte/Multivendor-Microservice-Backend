@@ -1,7 +1,7 @@
 const { ValidateNumberFormate } = require("../../utils");
 
 module.exports = async (req, res, next) => {
-  const ValidNumber = await ValidateNumberFormate(req.body.email);
+  const ValidNumber = await ValidateNumberFormate(req.body.phoneNo);
 
   if (ValidNumber) {
     return next();
