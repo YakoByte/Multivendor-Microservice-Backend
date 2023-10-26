@@ -16,14 +16,14 @@ class UserService {
   }
 
   async SignIn(userInputs) {
-    const { email, password, userIP, IPdata, systemName } = userInputs;
+    const { email, password, userIP, IPdata, systemName, OS, deviceType, browser } = userInputs;
     try {
       const existingUser = await this.repository.FindUser({ email });
       if (existingUser) {
         const validPassword = await ValidatePassword(password, existingUser.password);
 
         if (validPassword) {
-          const previousLoginHistory = await this.repository.CreateLoginHistory({userId: existingUser._id, userIP, IPdata, systemName});
+          const previousLoginHistory = await this.repository.CreateLoginHistory({userId: existingUser._id, userIP, IPdata, systemName, OS, deviceType, browser});
           if (previousLoginHistory.length >= 3) {
             return FormateData({
               message: "You can only login to 3 devices at a time",
@@ -47,7 +47,7 @@ class UserService {
   }
 
   async SignUp(userInputs) {
-    const { email, phoneNo, password, passwordQuestion, passwordAnswer, userIP, IPdata, systemName } = userInputs;
+    const { email, phoneNo, password, passwordQuestion, passwordAnswer, userIP, IPdata, systemName, OS, deviceType, browser } = userInputs;
     try {
       let salt = await GenerateSalt();
       let userPassword = await GeneratePassword(password, salt);
@@ -60,7 +60,7 @@ class UserService {
         return FormateData({ message: "User already exist" });
       }
 
-      await this.repository.CreateLoginHistory({userId: User._id, userIP, IPdata, systemName});
+      await this.repository.CreateLoginHistory({userId: User._id, userIP, IPdata, systemName, OS, deviceType, browser});
 
       const Password = await this.repository.CreatePassword({
         userId: User._id,
@@ -81,9 +81,9 @@ class UserService {
   }
 
   async LogOut(userInputs) {
-    const { userId, userIP, systemName } = userInputs;
+    const { userId, OS, browser, deviceType } = userInputs;
     try {
-      const logoutUser = await this.repository.LogOut({ userId, userIP, systemName });
+      const logoutUser = await this.repository.LogOut({ userId, OS, browser, deviceType });
       if(!logoutUser){
         return FormateData({message:"Failed to logout"})
       }

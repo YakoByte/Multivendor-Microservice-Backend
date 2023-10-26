@@ -1,29 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const { SECRET_KEY } = require("../config/index");
-
-//Utility functions
-module.exports.GenerateSalt = async () => {
-  return await bcrypt.genSalt();
-};
-
-module.exports.GeneratePassword = async (password, savedPassword) => {
-  return await bcrypt.compare(password, savedPassword);
-};
-
-module.exports.ValidatePassword = async (enteredPassword, savedPassword) => {
-  return (await this.GeneratePassword(enteredPassword, savedPassword));
-};
-
-module.exports.GenerateSignature = async (payload) => {
-  try {
-    return await jwt.sign(payload, SECRET_KEY, { expiresIn: "30d" });
-  } catch (error) {
-    console.log(error);
-    return error;
-  }
-};
 
 module.exports.ValidateSignature = async (req) => {
   try {
@@ -39,10 +16,25 @@ module.exports.ValidateSignature = async (req) => {
   }
 };
 
+module.exports.ValidateImageFormate = (image) => {
+  try {
+    if (image) {
+      if (!["image/png", "image/jpeg", "image/jpg", "image/svg+xml"].includes(image.mimetype)) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+
 module.exports.FormateData = (data) => {
   if (data) {
     return { data };
   } else {
-    throw new Error("Data Not found!");
+    return { message: "Data Not found!" };
   }
 };

@@ -18,6 +18,18 @@ const loginHistorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    OS: {
+      type: String,
+      required: true,
+    },
+    browser: {
+      type: String,
+      required: true,
+    },
+    deviceType: {
+      type: String,
+      required: true,
+    },
     isLogedIn: {
       type: Boolean,
       default: true,

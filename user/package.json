@@ -26,6 +26,8 @@
     "nodemon": "^3.0.1",
     "os": "^0.1.2",
     "request-ip": "^3.3.0",
+    "user-agents": "^1.1.2",
+    "useragent": "^2.3.0",
     "winston": "^3.11.0"
   }
 }

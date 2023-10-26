@@ -80,7 +80,6 @@ class OtherRepository {
 
   async CreateCoupon({userId, CouponId, name, constrait, description, offerType, amountOff}) {
     try {
-      console.log(userId, CouponId, name, constrait, description, offerType, amountOff);
       const coupon = new couponModel({
         userId: userId,
         CouponId: CouponId,

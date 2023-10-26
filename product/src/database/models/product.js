@@ -1,76 +1,87 @@
 const mongoose = require("mongoose");
 
-const productSchema = new mongoose.Schema({
-    customId:{
-        type: String,
-        required: true,
+const productSchema = new mongoose.Schema(
+  {
+    customId: {
+      type: String,
+      required: true,
     },
-    name: { 
-        type: String, 
-        required: true 
+    name: {
+      type: String,
+      required: true,
     },
-    description: { 
-        type: String, 
-        required: false
+    description: {
+      type: String,
+      required: false,
     },
-    Specification:[{
-        "key": "value",
-        default: []
-    }],
+    Specification: [
+      {
+        key: {
+          type: String,
+          required: true,
+        },
+        value: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
     price: {
-        type : Number,
-        required :true,
+      type: Number,
+      required: true,
     },
     sellerDiscount: {
-        type : Number,
+      type: Number,
     },
     adminDiscount: {
-        type :Number,
+      type: Number,
     },
     finalPrice: {
-        type : Number,
+      type: Number,
     },
     stock: {
-        type: Number,
+      type: Number,
     },
     categoryId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref:"Category",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
     },
-    subCategory: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'SubCategory',
+    subCategoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubCategory",
     },
-    configurationId: [{
+    configurationId: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref:'Configuration'
-    }],
+        ref: "Configuration",
+      },
+    ],
     badgeId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Badge'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Badge",
     },
     sellerId: {
-        type:mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     manufacturerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Manufacturer'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Manufacturer",
     },
     offerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Offer'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Offer",
     },
     isActive: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true,
     },
     isAvailable: {
-        type:Boolean,
-        default: true
-    }
-},
-  {timestamps: true,}
+      type: Boolean,
+      default: true,
+    },
+  },
+  { timestamps: true }
 );
 
 const Product = mongoose.model("Product", productSchema);

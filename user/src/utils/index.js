@@ -1,9 +1,21 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
+const useragent = require("useragent");
 const { SECRET_KEY, emailUsername, emailPassword, emailService } = require("../config/index");
 
-//Utility functions
+module.exports.parseUserAgent = async (Agent) => {
+  const agent = useragent.parse(Agent);
+  
+  return {
+    browser: agent.family,
+    version: agent.toVersion(),
+    os: agent.os.family,
+    osVersion: agent.os.toVersion(),
+    deviceType: agent.device.family,
+  };
+}
+
 module.exports.GenerateSalt = async () => {
   return await bcrypt.genSalt(10);
 };

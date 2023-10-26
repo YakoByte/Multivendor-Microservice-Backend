@@ -1,6 +1,7 @@
 const UserService = require("../services/user");
 const { ValidateEmail, ValidatePassword, ValidateNumber } = require("./validators");
 const UserAuth = require("./middlewares/auth");
+const { parseUserAgent } = require("../utils")
 
 const IP = require('ip');
 const axios = require('axios');
@@ -16,8 +17,14 @@ module.exports = (app) => {
       const { IPdata } = ipLookUp;
       const systemName = os.hostname();
 
+      const userAgent = req.headers['user-agent'];
+      const browserInfo = await parseUserAgent(userAgent);
+      const OS = browserInfo.os; 
+      const deviceType = browserInfo.deviceType;
+      const browser = browserInfo.browser;
+
       const { email, phoneNo, password, passwordQuestion, passwordAnswer } = req.body;
-      const { data } = await service.SignUp({ email, phoneNo, password, passwordQuestion, passwordAnswer, userIP, IPdata, systemName });
+      const { data } = await service.SignUp({ email, phoneNo, password, passwordQuestion, passwordAnswer, userIP, IPdata, systemName, OS, deviceType, browser });
       res.cookie("userToken", data.token, {
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
@@ -45,8 +52,14 @@ module.exports = (app) => {
       const { IPdata } = ipLookUp;
       const systemName = os.hostname();
 
+      const userAgent = req.headers['user-agent'];
+      const browserInfo = await parseUserAgent(userAgent);
+      const OS = browserInfo.os; 
+      const deviceType = browserInfo.deviceType;
+      const browser = browserInfo.browser;
+
       const { email, password } = req.body;
-      const { data } = await service.SignIn({ email, password, userIP, IPdata, systemName });
+      const { data } = await service.SignIn({ email, password, userIP, IPdata, systemName, OS, deviceType, browser });
       res.cookie("userToken", data.token, {
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
@@ -59,11 +72,16 @@ module.exports = (app) => {
 
   app.post('/logout', UserAuth, async(req, res, next) => {
     try {
-      const userIP = IP.address();
-      const systemName = os.hostname();
+      const userAgent = req.headers['user-agent'];
+      const browserInfo = await parseUserAgent(userAgent);
+      const OS = browserInfo.os; 
+      const deviceType = browserInfo.deviceType;
+      const browser = browserInfo.browser;
+
       const { _id } = req.user;
       const userId = _id;
-      const { data } = await service.LogOut({userId, userIP, systemName});
+
+      const { data } = await service.LogOut({userId, OS, browser, deviceType});
       res.clearCookie('userToken');
       return res.json(data);
     } catch (error) {
@@ -118,9 +136,3 @@ module.exports = (app) => {
     }
   });
 };
-
-
-
-// const response = await axios.get(`https://ipapi.co/${userIP}/json`);
-// const locationData = response.data;
-// console.log('User Location:', locationData);

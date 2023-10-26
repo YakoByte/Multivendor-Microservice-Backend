@@ -2,6 +2,14 @@ const mongoose = require("mongoose");
 
 const offerSchema = new mongoose.Schema(
   {
+    OfferId: {
+        type: String,
+        required: true,
+    },
+    productId: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product',
+    }],
     name: {
         type: String,
         require: true

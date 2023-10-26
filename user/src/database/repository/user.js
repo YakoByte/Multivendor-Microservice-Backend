@@ -45,7 +45,7 @@ const { SECRET_KEY } = require("../../config/index");
       }
     }
 
-    async CreateLoginHistory({ userId, userIP, IPdata, systemName }) {
+    async CreateLoginHistory({ userId, userIP, IPdata, systemName, OS, deviceType, browser }) {
       try {
         let location = 'World';
         if (IPdata && IPdata.data && IPdata.data.location) {
@@ -55,13 +55,16 @@ const { SECRET_KEY } = require("../../config/index");
         const existingLoginHistory = await loginHistoryModel.find({ userId: userId });
 
         if (existingLoginHistory.length < 3) {
-            const LoginData = new loginHistoryModel({
-                userId: userId,
-                IPAddress: userIP,
-                location: location,
-                system: systemName,
-                isLogedIn: true,
-            });
+          const LoginData = new loginHistoryModel({
+            userId: userId,
+            IPAddress: userIP,
+            location: location,
+            system: systemName,
+            OS: OS,
+            deviceType: deviceType,
+            browser: browser,
+            isLogedIn: true,
+          });
 
             const LoginHistory = await LoginData.save();
             return LoginHistory;
@@ -69,7 +72,7 @@ const { SECRET_KEY } = require("../../config/index");
 
         return existingLoginHistory;
       } catch (error) {
-        throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, "Unable to Create Login History");
+        throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
       }
     }       
   
@@ -130,9 +133,14 @@ const { SECRET_KEY } = require("../../config/index");
       }
     }
 
-    async LogOut({ userId, userIP, systemName }) {
+    async LogOut({ userId, OS, browser, deviceType }) {
       try {
-          const updatedUser = await loginHistoryModel.findOneAndDelete({userId: userId, IPAddress: userIP, system: systemName});
+          const updatedUser = await loginHistoryModel.findOneAndDelete({
+            userId: userId, 
+            OS: OS, 
+            browser: browser, 
+            deviceType: deviceType
+          });
           if (!updatedUser) {
               return false;
           }
