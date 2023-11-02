@@ -1,4 +1,4 @@
-const OfferService = require("../services/offer");
+const ProductService = require("../services/product");
 const UserAuth = require("./middlewares/auth");
 
 var multer = require("multer");
@@ -13,9 +13,9 @@ var storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 module.exports = (app) => {
-  const service = new OfferService();
+  const service = new ProductService();
 
-  app.post("/product", UserAuth, upload.array('files'), async (req, res, next) => {
+  app.post("/item", UserAuth, upload.array('files'), async (req, res, next) => {
     try {
       const { _id } = req.user;
       const sellerId = _id;
@@ -28,7 +28,7 @@ module.exports = (app) => {
     }
   });
 
-  app.put("/product/:productId", UserAuth, upload.array('files'), async(req, res, next) => {
+  app.put("/item/:productId", UserAuth, upload.array('files'), async(req, res, next) => {
     try{
       const { _id } = req.user;
       const sellerId = _id;
@@ -42,7 +42,16 @@ module.exports = (app) => {
       }
   });
 
-  app.get("/product", UserAuth, async(req, res, next) => {
+  app.get("/item", UserAuth, async(req, res, next) => {
+    try{
+      const { data } = await service.FindAllProduct();
+      return res.json(data);
+      }catch(err){
+        next(err)
+      }
+  });
+
+  app.get("/item/one", UserAuth, async(req, res, next) => {
     try{
       const { productId } = req.body;
       const { data } = await service.FindProduct({ productId });
@@ -52,26 +61,17 @@ module.exports = (app) => {
       }
   });
 
-  app.get("/product/all", UserAuth, async(req, res, next) => {
+  app.get("/item/query", UserAuth, async(req, res, next) => {
     try{
-      const { data } = await service.FindAllProduct();
-      return res.json(data);
+        const { Specification, categoryId, subCategoryId, configurationId, UpperPrice, LowerPrice, badgeId, manufacturerId } = req.query;
+        const { data } = await service.FindKeyProduct({ Specification, categoryId, subCategoryId, configurationId, UpperPrice, LowerPrice, badgeId, manufacturerId });
+        return res.json(data);
       }catch(err){
         next(err)
       }
   });
 
-  app.get("/product/query", UserAuth, async(req, res, next) => {
-    try{
-        const data = { ...req.body };
-      const { result } = await service.FindKeyProduct({ data });
-      return res.json(result);
-      }catch(err){
-        next(err)
-      }
-  });
-
-  app.delete("/product", UserAuth, async(req, res, next) => {
+  app.delete("/item", UserAuth, async(req, res, next) => {
     try{
       const { _id } = req.user;
       const sellerId = _id;
@@ -91,5 +91,15 @@ module.exports = (app) => {
     }catch(err){
       next(err)
     }
+  });
+
+  app.get("/item/bill", UserAuth, async(req, res, next) => {
+    try{
+      const { productId } = req.query;
+      const { data } = await service.FindProductBill({ productId });
+      return res.json(data);
+      }catch(err){
+        next(err)
+      }
   });
 };

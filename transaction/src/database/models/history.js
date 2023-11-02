@@ -1,20 +1,18 @@
 const mongoose = require("mongoose");
 
-const historySchema = new mongoose(
+const historySchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    transactionId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Transaction",
-    },
-    log: {
-        actionType: String,
+    log: [{
+        objectId: mongoose.Schema.Types.ObjectId,
+        action: String,
         data: Object,
+        date: String,
         time: Date,
-      },
+      }],
   },
   { timestamps: true }
 );

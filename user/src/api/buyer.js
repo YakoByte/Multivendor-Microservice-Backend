@@ -85,7 +85,7 @@ module.exports = (app) => {
     }catch(error){
       next(error);
     }
-  })
+  });
 
   app.get("/buyer/address", UserBuyer, async (req, res, next) => {
     try {
@@ -95,5 +95,15 @@ module.exports = (app) => {
     } catch (error) {
       next(error);
     }
-  })
+  });
+
+  app.get("/buyer", UserBuyer, async (req, res, next) => {
+    try {
+      const { _id: userId } = req.user;
+      const { data } = await service.GetBuyer({ userId });
+      return res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  });
 };

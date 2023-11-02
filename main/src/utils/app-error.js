@@ -1,7 +1,7 @@
 const STATUS_CODES = {
   OK: 200,
   BAD_REQUEST: 400,
-  UN_AUTHORISED: 403,
+  UNAUTHORIZED: 401,
   NOT_FOUND: 404,
   INTERNAL_ERROR: 500,
 };
@@ -13,7 +13,7 @@ class AppError extends Error {
     description,
     isOperational,
     errorStack,
-    logingErrorResponse
+    logErrorResponse 
   ) {
     super(description);
     Object.setPrototypeOf(this, new.target.prototype);
@@ -21,12 +21,12 @@ class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.errorStack = errorStack;
-    this.logError = logingErrorResponse;
+    this.logErrorResponse = logErrorResponse;
     Error.captureStackTrace(this);
   }
 }
 
-//500
+// 500
 class APIError extends AppError {
   constructor(
     name,
@@ -34,41 +34,28 @@ class APIError extends AppError {
     description = "Internal Server Error",
     isOperational = true
   ) {
-    super(name, statusCode, description, isOperational);
+    super(name, statusCode, description, isOperational, null, true);
   }
 }
 
-//404
+// 404
+class NotFoundError extends AppError {
+  constructor(description = "Not Found") {
+    super("NOT FOUND", STATUS_CODES.NOT_FOUND, description, true, null, true);
+  }
+}
+
+// 400
 class BadRequestError extends AppError {
-  constructor(description = "Bad request", logingErrorResponse) {
-    super(
-      "NOT FOUND",
-      STATUS_CODES.BAD_REQUEST,
-      description,
-      true,
-      false,
-      logingErrorResponse
-    );
-  }
-}
-
-//400
-class ValidationError extends AppError {
-  constructor(description = "Validation Error", errorStack) {
-    super(
-      "BAD REQUEST",
-      STATUS_CODES.BAD_REQUEST,
-      description,
-      true,
-      errorStack
-    );
+  constructor(description = "Bad Request", errorStack) {
+    super("BAD REQUEST", STATUS_CODES.BAD_REQUEST, description, true, errorStack, true);
   }
 }
 
 module.exports = {
   AppError,
   APIError,
+  NotFoundError,
   BadRequestError,
-  ValidationError,
   STATUS_CODES,
 };

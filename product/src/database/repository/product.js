@@ -4,12 +4,7 @@ const { APIError, STATUS_CODES } = require("../../utils/app-error");
 class ProductRepository {
   async calculateFinalPrice(price, sellerDiscount, adminDiscount) {
     try {
-      if (product.length === 0) {
-        return 0;
-      }
-
-      let totalPrice = price - sellerDiscount - adminDiscount;
-
+      let totalPrice = price - ((sellerDiscount / 100) * price) - ((adminDiscount / 100) * price);
       return totalPrice;
     } catch (error) {
       console.error(error);
@@ -17,16 +12,16 @@ class ProductRepository {
     }
   }
 
-  async createProduct({ name, description, Specification, price, sellerDiscount, adminDiscount, stock, categoryId, subCategoryId, configurationId, badgeId, sellerId, manufacturerId, offerId }) {
+  async CreateProduct({ name, description, Specification, price, sellerDiscount, adminDiscount, stock, categoryId, subCategoryId, configurationId, badgeId, sellerId, manufacturerId, offerId }) {
     try {
       const customId = `${sellerId}-${name}`;
-
+      
       const existingProduct = await productModel.findOne({ customId: customId });
       
       if (existingProduct) {
         return null;
       }
-
+      
       const totalPrice = await this.calculateFinalPrice(price, sellerDiscount, adminDiscount);
 
       const product = new productModel({
@@ -37,7 +32,7 @@ class ProductRepository {
         price: price,
         sellerDiscount: sellerDiscount,
         adminDiscount: adminDiscount,
-        totalPrice: totalPrice,
+        finalPrice: totalPrice,
         stock: stock,
         categoryId: categoryId,
         subCategoryId: subCategoryId,
@@ -57,6 +52,7 @@ class ProductRepository {
 
   async CreateImage({ productId, Images }) {
     try {
+      const Image = [];
       for (let i = 0; i < Images.length; i++) {
         const { imagePath, mimeType, imageSize } = Images[i];
   
@@ -66,9 +62,10 @@ class ProductRepository {
           mimeType: mimeType,
           imageSize: imageSize,
         });
-  
         await imageData.save();
+        Image.push(imageData);
       }
+      return Image;
     } catch (error) {
       throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
@@ -95,6 +92,9 @@ class ProductRepository {
   async FindKeyProduct({ query }) {
     try {
       const products = await productModel.find(query);
+      if(!products){
+        return null;
+      }
       const productData = [];
   
       if (products.length > 0) {
@@ -133,6 +133,9 @@ class ProductRepository {
   async FindAllProduct() {
     try {
       const products = await productModel.find();
+      if(!products){
+        return null;
+      }
       const productResult = [];
   
       for (const product of products) {
@@ -213,6 +216,19 @@ class ProductRepository {
       }
   
       return imageData;
+    } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
+    }
+  }
+
+  async FindProductBill({ productId }) {
+    try {
+      const product = await productModel.findOne({ _id: productId });
+      if (!product) {
+        return null; 
+      }
+  
+      return product;
     } catch (error) {
       throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }

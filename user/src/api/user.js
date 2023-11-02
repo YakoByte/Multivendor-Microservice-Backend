@@ -135,4 +135,14 @@ module.exports = (app) => {
       next(err);
     }
   });
+
+  app.get("/getprofile", UserAuth, async (req, res, next) => {
+    try {
+      const { _id: userId } = req.user;
+      const { data } = await service.FindUserDetail({userId});
+      return res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  });
 };

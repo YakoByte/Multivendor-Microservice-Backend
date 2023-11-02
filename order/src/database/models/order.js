@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
-    customId: {
+    orderId: {
         type: String,
         required : true
     },
@@ -34,7 +34,7 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
         type: String,
-        enum: ["Pending", "Packed", "Dispatched", "Delivered"],
+        enum: ["Pending", "Accepted", "Packed", "Dispatched", "Delivered", "Cancel"],
         default:"Pending",
     },
     shipmentAddress: {
@@ -46,29 +46,8 @@ const orderSchema = new mongoose.Schema(
         enum:["COD", "Online"],
         default: "COD"
     },
-    taxCalculation: [{
-        name: {
-            type: String,
-            required:true,
-        },
-        type: {
-            type:String, 
-            required: true
-        },
-        tax: {
-            type: Number,
-            min: 0,
-            default: 5
-        },
-    }],
-    taxPdf: {
-        type: String,
-        required: true,
-        default: "bit.ly/3NgVNGV",
-    },
     billPdf: {
         type: String,
-        required: true,
         default: "bit.ly/3NgVNGV",
     }
   },

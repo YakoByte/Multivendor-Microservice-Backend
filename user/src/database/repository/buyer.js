@@ -150,6 +150,18 @@ class BuyerRepository {
       throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
     }
   }
+
+  async GetBuyer ({userId}) {
+    try{
+      const Profile = await buyerModel.find({ userId:userId });
+      if(!Profile){
+        return null;
+      }
+      return Profile;
+    } catch (error) {
+      throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
+    }
+  }
 }
 
 module.exports = BuyerRepository;

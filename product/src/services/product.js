@@ -12,6 +12,9 @@ class ProductService {
     const { name, description, Specification, price, sellerDiscount, adminDiscount, stock, categoryId, subCategoryId, configurationId, badgeId, sellerId, manufacturerId, offerId, Images } = userInputs;
     try {
       const Product = await this.repository.CreateProduct({ name, description, Specification, price, sellerDiscount, adminDiscount, stock, categoryId, subCategoryId, configurationId, badgeId, sellerId, manufacturerId, offerId });
+      if(!Product){
+        return FormateData({ message: 'Product Already exist'})
+      }
       const Image = await this.repository.CreateImage({productId: Product._id, Images})
       return FormateData({ Product, Image });
     } catch (err) {
@@ -62,44 +65,52 @@ class ProductService {
   }
 
   async FindKeyProduct(userInputs) {
-    const { data } = userInputs;
+    const { Specification, categoryId, subCategoryId, configurationId, UpperPrice, LowerPrice, badgeId, manufacturerId } = userInputs;
     try {
         const query = {};
 
-    if (data.Specification) {
-        query.subCategoryId = { $in: data.subCategoryId };
+    if (Specification) {
+        query.Specification = { $in: subCategoryId };
     }
 
-    if (data.categoryId) {
-      query.categoryId = data.categoryId;
+    if (categoryId) {
+      query.categoryId = categoryId;
     }
 
-    if (data.subCategoryId) {
-        query.subCategoryId = data.subCategoryId;
-      }
-
-    if (data.subCategoryId) {
-        query.subCategoryId = { $in: data.subCategoryId };
+    if (subCategoryId) {
+      query.subCategoryId = subCategoryId;
     }
 
-    if(data.configurationId) {
-      query.configurationId = configurationId;
+    if(configurationId) {
+      query.configurationId = { $in: configurationId };
     }
 
-    if(data.UpperPrice){
-        query.price = { $lt: data.UpperPrice };
+    if(UpperPrice){
+        query.price = { $lt: UpperPrice };
     }
 
-    if (data.LowerPrice) {
-        query.price = { $gt: data.LowerPrice };
+    if (LowerPrice) {
+        query.price = { $gt: LowerPrice };
     }
 
-    if(data.badgeId) {
-        query.badges = data.badgeId;
+    if(UpperPrice){
+      query.finalPrice = { $lt: UpperPrice };
+    }
+
+    if (LowerPrice) {
+      query.finalPrice = { $gt: LowerPrice };
+    }
+
+    if(badgeId) {
+        query.badges = badgeId;
+    }
+
+    if(manufacturerId) {
+      query.manufacturerId = manufacturerId;
     }
 
     const Product = await this.repository.FindKeyProduct({ query });
-    if(!Product) {
+    if(!Product || Product.length === 0) {
         return FormateData({ message: 'No such product exists' });
     }
     return FormateData({ Product });
@@ -130,6 +141,19 @@ class ProductService {
             return FormateData({ message: 'No such Images exists' });
         }
         return FormateData({ Image });
+    } catch (error) {
+        throw new APIError("Data Not found", error);
+    }
+  }
+
+  async FindProductBill(userInputs) {
+    const { productId } = userInputs;
+    try {
+        const Product = await this.repository.FindProductBill({ productId });
+        if(!Product) {
+            return FormateData({ message: 'No such product exists' });
+        }
+        return FormateData({ Product });
     } catch (error) {
         throw new APIError("Data Not found", error);
     }

@@ -26,7 +26,7 @@ const shipmentSchema = new mongoose.Schema(
         state: {
             type: String,
         },
-        country: {
+        countryCode: {
             type: String,
         }
     }],

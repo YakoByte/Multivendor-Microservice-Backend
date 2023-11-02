@@ -179,6 +179,16 @@ class UserService {
       throw new APIError("Data Not found", err);
     }
   }
+
+  async FindUserDetail(userInputs) {
+    try {
+      const { userId } = userInputs;
+      const existingUser = await this.repository.FindUserDetail({userId});
+      return FormateData({ existingUser });
+    } catch (err) {
+      throw new APIError("Data Not found", err);
+    }
+  }
 }
 
 module.exports = UserService;

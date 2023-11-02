@@ -54,10 +54,27 @@ const transactionSchema = new mongoose.Schema(
         enum: ["current", "savings"],
       },
     },
-    LocationId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Location',
-    }
+    taxCalculation: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+        type: {
+          type: String,
+          required: true,
+        },
+        tax: {
+          type: Number,
+          min: 0,
+          default: 18,
+        },
+      },
+    ],
+    taxPdf: {
+      type: String,
+      default: "bit.ly/3NgVNGV",
+    },
   },
   { timestamps: true }
 );

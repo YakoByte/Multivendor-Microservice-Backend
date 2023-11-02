@@ -2,18 +2,24 @@ const mongoose = require("mongoose");
 
 const chatSchema = new mongoose.Schema(
   {
-    buyerId:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:'User'
+    photo: {
+      type: String,
+      default: 'https://cdn-icons-png.flaticon.com/512/9790/9790561.png',
     },
-    adminId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref:"User"
+    chatName: {
+      type: String,
+      default: 'Support Team'
     },
-    sellerId: {
-        type :  mongoose.Schema.Types.ObjectId ,
-        ref :"User"
-    }
+    users: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    latestMessage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message',
+    },
   },
   { timestamps: true }
 );

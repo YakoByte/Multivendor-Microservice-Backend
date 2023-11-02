@@ -282,6 +282,19 @@ const { SECRET_KEY } = require("../../config/index");
         throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
       }
     }
+
+    async FindUserDetail({ userId }) {
+      try {
+        const userResult = await userModel.findOne({ _id: userId });
+        if (!userResult) {
+          throw new APIError("User not found", STATUS_CODES.NOT_FOUND, "User not found");
+        }
+    
+        return userResult;
+      } catch (error) {
+        throw new APIError("API Error", STATUS_CODES.INTERNAL_ERROR, error.message);
+      }
+    }
   }
   
   module.exports = UserRepository;

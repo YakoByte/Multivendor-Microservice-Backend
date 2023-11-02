@@ -1,6 +1,7 @@
 const { createLogger, transports, format } = require("winston");
-const { AppError } = require("./app-error");
+const { AppError , STATUS_CODES } = require("./app-error");
 
+// Set up the Winston logger with error handling
 const LogErrors = createLogger({
   transports: [
     new transports.Console(),
@@ -16,14 +17,13 @@ class ErrorLogger {
   constructor() {}
 
   async logError(err) {
-    console.log("==================== Start Error Logger ===============");
-    LogErrors.log({
-      level: "error",
-      message: `${new Date()}-${JSON.stringify(err)}`,
-    });
-    console.log("==================== End Error Logger ===============");
-
-    return false;
+    try {
+      console.log("==================== Start Error Logger ===============");
+      LogErrors.error(`${new Date()}-${JSON.stringify(err)}`);
+      console.log("==================== End Error Logger ===============");
+    } catch (error) {
+      console.error("Error occurred while logging:", error);
+    }
   }
 
   isTrustedError(error) {
@@ -36,22 +36,27 @@ class ErrorLogger {
 }
 
 const ErrorHandler = async (err, req, res, next) => {
-  const errorLogger = new ErrorLogger();
+  try {
+    const errorLogger = new ErrorLogger();
 
-  if (err) {
-    await errorLogger.logError(err);
+    if (err) {
+      await errorLogger.logError(err);
 
-    if (errorLogger.isTrustedError(err)) {
-      if (err.errorStack) {
-        const errorDescription = err.errorStack;
-        return res.status(err.statusCode).json({ message: errorDescription });
+      if (errorLogger.isTrustedError(err)) {
+        if (err.errorStack) {
+          const errorDescription = err.errorStack;
+          return res.status(err.STATUS_CODES).json({ message: errorDescription });
+        }
+        return res.status(err.STATUS_CODES).json({ message: err.message });
+      } else {
+        return next(err);
       }
-      return res.status(err.statusCode).json({ message: err.message });
-    } else {
-      return next(err);
     }
+    next();
+  } catch (error) {
+    console.error("Error occurred in error handling:", error);
+    next(error); 
   }
-  next();
 };
 
 module.exports = ErrorHandler;

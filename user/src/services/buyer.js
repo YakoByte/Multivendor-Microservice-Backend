@@ -104,6 +104,19 @@ class BuyerService {
       throw new APIError("Data Not found", error);
     }
   }
+
+  async GetBuyer(userInputs) {
+    const { userId } = userInputs;
+    try {
+      const Profile = await this.repository.GetBuyer({userId});
+      if (!Profile) {
+        return FormateData({ message: "No Profile Found For This User." });
+      }
+        return FormateData({ Profile });
+    } catch (error) {
+      throw new APIError("Data Not found", error);
+    }
+  }
 }
 
 module.exports = BuyerService;

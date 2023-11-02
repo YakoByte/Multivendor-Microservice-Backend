@@ -17,11 +17,6 @@ const notificationSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    status: {
-        type: String,
-        enum: ['sended', 'received', 'unread', 'read'],
-        default:"sended"
-    }
 });
 
 const Notification = mongoose.model("Notification", notificationSchema);
